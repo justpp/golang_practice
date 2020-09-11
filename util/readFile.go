@@ -1,4 +1,4 @@
-package utls
+package util
 
 import (
 	"bufio"
@@ -11,21 +11,31 @@ import (
 func ReadFileByOs(fileName string) {
 	var rows = make([]byte, 4096)
 	file, err := os.Open(fileName)
-	defer file.Close()
-	if err != nil {
-		fmt.Println("读取错误！")
+	if file == nil {
+		fmt.Println("读取错误")
+	} else {
+		defer file.Close()
+		if err != nil {
+			fmt.Println("读取错误！")
+		}
+		n, err := file.Read(rows)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(string(rows[:n]))
 	}
-	n, err := file.Read(rows)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(string(rows[:n]))
+
 }
 
 // 读取配置文件
 func ReadIniByBuf(fileName, sectionName, keyName string) string {
 	file, err := os.Open(fileName)
-	defer file.Close()
+	if file == nil {
+		return "读取错误"
+	} else {
+		defer file.Close()
+	}
+
 	var currSectionName = ""
 	if err != nil {
 		fmt.Println("读取错误！")
@@ -58,5 +68,5 @@ func ReadIniByBuf(fileName, sectionName, keyName string) string {
 			return part[1]
 		}
 	}
-	return "没有想要的键值"+keyName
+	return "没有想要的键值" + keyName
 }

@@ -1,4 +1,4 @@
-package utls
+package util
 
 import (
 	"fmt"
@@ -14,7 +14,6 @@ type Student struct {
 type input interface {
 	pickUp(i *input)
 }
-
 
 // StudentList 存储map
 var StudentList = make(map[uint64]*Student, 12)
@@ -36,7 +35,7 @@ func Manger() {
 			4.退出
 		请输入命令编号:`)
 		var input int
-		_,err :=fmt.Scanln(&input)
+		_, err := fmt.Scanln(&input)
 		if err != nil {
 			fmt.Println("输入的是个什么玩意儿···")
 		}
@@ -92,7 +91,7 @@ func addStudent() {
 	}
 	if name == "" {
 		fmt.Print("请输入姓名:")
-		_,er :=fmt.Scanln(&name)
+		_, er := fmt.Scanln(&name)
 		if er != nil {
 			fmt.Println("")
 			fmt.Println("姓名啊，老弟！")
@@ -115,7 +114,7 @@ func addStudent() {
 func delStudent() {
 	var id uint64
 	fmt.Print("请输入需要删除学号:")
-	_,er := fmt.Scanln(&id)
+	_, er := fmt.Scanln(&id)
 	if er != nil {
 		fmt.Println("")
 		fmt.Println("学号啊，老弟！")
