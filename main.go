@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"giao/util"
+	"os/exec"
 )
 
 func main() {
@@ -10,6 +10,8 @@ func main() {
 	//fmt.Println("23")
 	//util.UseFunc(util.Closure(1,3))
 	//util.ReadFileByOs("./nginx.conf")
-	value := util.ReadIniByBuf("./application.ini", "common", "smarty.api.compile_dir")
-	fmt.Println(value)
+	ls := exec.Command("ls", "-a")
+	fmt.Println(ls)
+	//value := util.ReadIniByBuf("./application.ini", "common", "database.config.dbname")
+	//fmt.Println(value)
 }
