@@ -13,18 +13,17 @@ func ReadFileByOs(fileName string) {
 	file, err := os.Open(fileName)
 	if file == nil {
 		fmt.Println("读取错误")
-	} else {
-		defer file.Close()
-		if err != nil {
-			fmt.Println("读取错误！")
-		}
-		n, err := file.Read(rows)
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(string(rows[:n]))
+		os.Exit(1)
 	}
-
+	defer file.Close()
+	if err != nil {
+		fmt.Println("读取错误！")
+	}
+	n, err := file.Read(rows)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(string(rows[:n]))
 }
 
 // 读取配置文件

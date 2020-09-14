@@ -19,11 +19,6 @@ type input interface {
 var StudentList = make(map[uint64]*Student, 12)
 
 // Manger 学生管理系统
-// func (s Student) Manger() {
-// 	fmt.Println("23")
-// }
-
-// Manger 学生管理系统
 func Manger() {
 	for {
 		StudentList[1] = &Student{"二傻子", 2}
