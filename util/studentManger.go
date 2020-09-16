@@ -86,8 +86,10 @@ func addStudent() {
 	}
 	if name == "" {
 		fmt.Print("请输入姓名:")
-		_, er := fmt.Scanln(&name)
-		if er != nil {
+		_, err := fmt.Scanln(&name)
+		//std := bufio.NewReader(os.Stdin)
+		//name,err := std.ReadString('\n')
+		if err != nil {
 			fmt.Println("")
 			fmt.Println("姓名啊，老弟！")
 			addStudent()

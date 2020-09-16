@@ -10,5 +10,7 @@ func main() {
 
 	//value := util.ReadIniByBuf("./application.ini", "common", "database.config.dbname")
 	//fmt.Println(value)
-	util.WritSomethingToFile("g")
+	//util.WritOS("os")
+	//util.WriteBuff("buf")
+	util.WriteIoUtil("ioUtil")
 }
