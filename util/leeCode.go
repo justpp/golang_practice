@@ -21,31 +21,32 @@ type ListNode struct {
 }
 
 func TowSumList(l1 *ListNode, l2 *ListNode) *ListNode {
-	l := new(ListNode)
+	l := &ListNode{0, nil}
 	tmpL := l
-	L1 := l1
-	L2 := l2
 	addition := 0
 	count := 0
+	var a, b, val int
 	fmt.Println("--------------------- ")
 	fmt.Println("l1: ")
 	ShowListNode(l1)
 	fmt.Println("l2: ")
 	ShowListNode(l2)
 	fmt.Println("---------start------------ ")
-	for (L1 != nil) || (L2 != nil) || addition > 0 {
+	for (l1 != nil) || (l2 != nil) || addition > 0 {
 		count++
-		fmt.Println(L1, L2, addition)
+		fmt.Println(l1, l2, addition)
 		fmt.Println(count)
-		a := 0
-		b := 0
-		if L1 != nil {
-			a = L1.Val
+		if l1 != nil {
+			a = l1.Val
+		} else {
+			a = 0
 		}
-		if L2 != nil {
-			b = L2.Val
+		if l2 != nil {
+			b = l2.Val
+		} else {
+			b = 0
 		}
-		val := a + b + addition
+		val = a + b + addition
 		fmt.Printf("a:%v b:%v addition:%v \n", a, b, addition)
 
 		if val > 9 {
@@ -56,14 +57,14 @@ func TowSumList(l1 *ListNode, l2 *ListNode) *ListNode {
 		}
 
 		tmpL.Val = val
-		if L1 != nil {
-			L1 = L1.Next
+		if l1 != nil {
+			l1 = l1.Next
 		}
-		if L2 != nil {
-			L2 = L2.Next
+		if l2 != nil {
+			l2 = l2.Next
 		}
-		if (L1 != nil) || (L2 != nil) || addition > 0 {
-			tmpL.Next = new(ListNode)
+		if (l1 != nil) || (l2 != nil) || addition > 0 {
+			tmpL.Next = &ListNode{0, nil}
 			tmpL = tmpL.Next
 		}
 
@@ -71,7 +72,7 @@ func TowSumList(l1 *ListNode, l2 *ListNode) *ListNode {
 		ShowListNode(tmpL)
 		fmt.Println("L1: ")
 
-		ShowListNode(L1)
+		ShowListNode(l1)
 
 		fmt.Println("l: ")
 		ShowListNode(l)
