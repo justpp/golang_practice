@@ -33,7 +33,7 @@ func TowSumList(l1 *ListNode, l2 *ListNode) *ListNode {
 	fmt.Println("l2: ")
 	ShowListNode(l2)
 	fmt.Println("---------start------------ ")
-	for (L1 != nil && L1.Next != nil) || (L2 != nil && L2.Next != nil) || addition > 0 {
+	for (L1 != nil) || (L2 != nil) || addition > 0 {
 		count++
 		fmt.Println(L1, L2, addition)
 		fmt.Println(count)
@@ -62,8 +62,10 @@ func TowSumList(l1 *ListNode, l2 *ListNode) *ListNode {
 		if L2 != nil {
 			L2 = L2.Next
 		}
-		tmpL.Next = new(ListNode)
-		tmpL = tmpL.Next
+		if (L1 != nil) || (L2 != nil) || addition > 0 {
+			tmpL.Next = new(ListNode)
+			tmpL = tmpL.Next
+		}
 
 		fmt.Println("tmpL: ")
 		ShowListNode(tmpL)
@@ -83,7 +85,7 @@ func ShowListNode(node *ListNode) {
 		return
 	}
 	var showSlice = make([]int, 0)
-	for node.Next != nil {
+	for node != nil {
 		showSlice = append(showSlice, node.Val)
 		node = node.Next
 	}
