@@ -1,6 +1,9 @@
 package main
 
-import "giao/util"
+import (
+	"fmt"
+	"giao/util"
+)
 
 func main() {
 	//util.Manger()
@@ -12,5 +15,29 @@ func main() {
 	//fmt.Println(value)
 	//util.WritOS("os")
 	//util.WriteBuff("buf")
-	util.WriteIoUtil("ioUtil")
+	//util.WriteIoUtil("ioUtil")
+	l1 := &util.ListNode{
+		Val: 2,
+		Next: &util.ListNode{
+			Val: 4,
+			Next: &util.ListNode{
+				Val:  3,
+				Next: &util.ListNode{},
+			},
+		},
+	}
+
+	l2 := &util.ListNode{
+		Val: 5,
+		Next: &util.ListNode{
+			Val: 6,
+			Next: &util.ListNode{
+				Val:  4,
+				Next: &util.ListNode{},
+			},
+		},
+	}
+	res := util.TowSumList(l1, l2)
+	fmt.Println("result:")
+	util.ShowListNode(res)
 }
