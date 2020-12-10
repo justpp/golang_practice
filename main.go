@@ -22,7 +22,7 @@ func main() {
 			Val: 4,
 			Next: &util.ListNode{
 				Val:  3,
-				Next: &util.ListNode{},
+				Next: nil,
 			},
 		},
 	}
@@ -33,10 +33,12 @@ func main() {
 			Val: 6,
 			Next: &util.ListNode{
 				Val:  4,
-				Next: &util.ListNode{},
+				Next: nil,
 			},
 		},
 	}
+	//util.ShowListNode(l1)
+	//util.ShowListNode(l2)
 	res := util.TowSumList(l1, l2)
 	fmt.Println("result:")
 	util.ShowListNode(res)
