@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"giao/util"
 )
 
@@ -15,31 +14,11 @@ func main() {
 	//fmt.Println(value)
 	//util.WritOS("os")
 	//util.WriteBuff("buf")
-	//util.WriteIoUtil("ioUtil")
-	l1 := &util.ListNode{
-		Val: 2,
-		Next: &util.ListNode{
-			Val: 4,
-			Next: &util.ListNode{
-				Val:  3,
-				Next: nil,
-			},
-		},
-	}
+	//util.WriteIoUtil("ioUtil") // 文件写入
 
-	l2 := &util.ListNode{
-		Val: 5,
-		Next: &util.ListNode{
-			Val: 6,
-			Next: &util.ListNode{
-				Val:  4,
-				Next: nil,
-			},
-		},
-	}
-	//util.ShowListNode(l1)
-	//util.ShowListNode(l2)
-	res := util.TowSumList(l1, l2)
-	fmt.Println("result:")
-	util.ShowListNode(res)
+	var str1 = "网站高并发解决方案"
+	var str2 = "如何解决网站高并发"
+
+	util.LongestCommSub(str1, str2)
+
 }
