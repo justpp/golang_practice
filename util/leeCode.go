@@ -174,3 +174,72 @@ func LongestCommSub(str1 string, str2 string) string {
 	fmt.Println("result:", subStr)
 	return subStr
 }
+
+/**
+ * Definition for singly-linked list.
+ * type ListNode struct {
+ *     Val int
+ *     Next *ListNode
+ * }
+ */
+
+var L1 = &ListNode{
+	Val: 2,
+	Next: &ListNode{
+		Val: 4,
+		Next: &ListNode{
+			Val:  3,
+			Next: nil,
+		},
+	},
+}
+
+var L2 = &ListNode{
+	Val: 5,
+	Next: &ListNode{
+		Val: 5,
+		Next: &ListNode{
+			Val:  4,
+			Next: nil,
+		},
+	},
+}
+
+func AddTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
+	res := &ListNode{}
+	curr := res
+	addition := 0
+	for l1 != nil || l2 != nil || addition != 0 {
+		curr.Next = &ListNode{}
+		curr = curr.Next
+		if l1 != nil {
+			curr.Val += l1.Val
+			l1 = l1.Next
+		}
+		if l2 != nil {
+			curr.Val += l2.Val
+			l2 = l2.Next
+		}
+		curr.Val += addition
+		addition = curr.Val / 10
+		curr.Val %= 10
+	}
+	return res.Next
+}
+
+// 字符串内最长重复字串 滑窗
+func LengthOfLongestSubstring(s string) int {
+	start, end := 0, 0
+	for i := 0; i < len(s); i++ {
+		index := strings.Index(s[start:i], string(s[i]))
+		if index == -1 {
+			if i+1 > end {
+				end = i + 1
+			}
+		} else {
+			start += index + 1
+			end += index + 1
+		}
+	}
+	return end - start
+}

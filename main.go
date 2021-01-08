@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"giao/util"
 )
 
@@ -16,9 +17,11 @@ func main() {
 	//util.WriteBuff("buf")
 	//util.WriteIoUtil("ioUtil") // 文件写入
 
-	var str1 = "网站高并发解决方案"
-	var str2 = "如何解决网站高并发"
-
-	util.LongestCommSub(str1, str2)
+	//var str1 = "网站高并发解决方案"
+	//var str2 = "如何解决网站高并发网站高并发解决方案"
+	//
+	//util.LongestCommSub(str1, str2)
+	s := "dvdfd"
+	fmt.Println(util.LengthOfLongestSubstring(s))
 
 }
