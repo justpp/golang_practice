@@ -205,6 +205,7 @@ var L2 = &ListNode{
 	},
 }
 
+// 两个倒序链表相加
 func AddTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
 	res := &ListNode{}
 	curr := res
@@ -242,4 +243,21 @@ func LengthOfLongestSubstring(s string) int {
 		}
 	}
 	return end - start
+}
+
+//  查找两个正序数组的中位数  给定两个大小为 m 和 n 的正序（从小到大）数组 nums1 和 nums2。请你找出并返回这两个正序数组的中位数。
+func FindMedianSortedArrays(nums1 []int, nums2 []int) float64 {
+	sli := append(nums1, nums2...)
+	l := len(sli)
+	for i := 0; i < l; i++ {
+		for j := 0; j < l; j++ {
+			if sli[i] < sli[j] {
+				sli[i], sli[j] = sli[j], sli[i]
+			}
+		}
+	}
+	if l%2 == 0 {
+		return float64(sli[l/2]+sli[l/2-1]) / 2
+	}
+	return float64(sli[l/2])
 }
