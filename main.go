@@ -1,9 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"giao/util"
-)
+import "fmt"
 
 func main() {
 	//util.Manger()
@@ -20,8 +17,9 @@ func main() {
 	//var str1 = "网站高并发解决方案"
 	//var str2 = "如何解决网站高并发网站高并发解决方案"
 	//
-	//util.LongestCommSub(str1, str2)
-	s := "dvdfd"
-	fmt.Println(util.LengthOfLongestSubstring(s))
 
+	fmt.Println(float64(5) / float64(3))
+	//nums1 := []int{1,3,5}
+	//nums2 := []int{2,4,6,7}
+	//fmt.Println(util.FindMedianSortedArrays(nums1,nums2))
 }
