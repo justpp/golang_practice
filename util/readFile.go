@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// 读取文件
+// ReadFileByOs 读取文件
 func ReadFileByOs(fileName string) {
 	var rows = make([]byte, 4096)
 	file, err := os.Open(fileName)
@@ -26,7 +26,7 @@ func ReadFileByOs(fileName string) {
 	fmt.Println(string(rows[:n]))
 }
 
-// 读取配置文件
+// ReadIniByBuf 读取配置文件
 func ReadIniByBuf(fileName, sectionName, keyName string) string {
 	file, err := os.Open(fileName)
 	if file == nil {
