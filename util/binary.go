@@ -50,11 +50,42 @@ func PreorderTraversal(node *Node) {
 	return
 }
 
+func (n *Node) search(val int) *Node  {
+	if n.IsEmpty() {
+		return nil
+	}
+	if n.Val == val {
+		return n
+	}
+	if n.Val > val {
+		if n.Right == nil {
+			return nil
+		}
+		return n.Right.search(val)
+	} else {
+		if n.Left == nil {
+			return nil
+		}
+		return n.Left.search(val)
+	}
+}
+
+func (n *Node) MinDel() *Node  {
+	if n.IsEmpty() {
+		return nil
+	}
+	if n.Left == nil {
+		return n.Right
+	}
+	return n
+}
+
 func CreateBinary() {
 	var a = new(Node)
-	arr := [...]int{9, 9, 10, 1, 2, 4, 5, 6}
+	arr := [...]int{9, 9, 10, 1, 3,2, 4, 5, 6}
 	for _, i := range arr {
 		a.Add(i)
 	}
 	ShowBinary(a)
+
 }
