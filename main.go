@@ -36,10 +36,19 @@ func main() {
 	//println("res", res)
 
 	//util.NNTable()
-	util.SwitchDemo()
+	x := 1
+	y := 2
+	defer util.DeferTestCalc("AA", x, util.DeferTestCalc("A", x, y))
+	x = 10
+	defer util.DeferTestCalc("BB", x, util.DeferTestCalc("B", x, y))
+	y = 20
+	// A  3 1 2
+	// B  12 10 2
+	// BB 22 10 12
+	// AA 4 1 3
 }
 
-func contextTest()  {
+func contextTest() {
 	ctx, cancel := context.WithCancel(context.Background())
 	go firstCtx(ctx)
 	time.Sleep(5 * time.Second)
