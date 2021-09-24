@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// 二维切片中两数之和 返回下标
+// TwoSumReturnK 二维切片中两数之和 返回下标
 func TwoSumReturnK(nums []int, target int) []int {
 	hashTable := map[int]int{}
 	for i, x := range nums {
@@ -17,7 +17,7 @@ func TwoSumReturnK(nums []int, target int) []int {
 	return nil
 }
 
-// 两数之和 两个倒叙链表
+// ListNode 两数之和 两个倒叙链表
 type ListNode struct {
 	Val  int
 	Next *ListNode
@@ -123,7 +123,7 @@ func TwoSumListTest() {
 	ShowListNode(res)
 }
 
-// 最长子串
+// LongestCommSub 最长子串
 func LongestCommSub(str1 string, str2 string) string {
 	var data = make(map[int]map[int]int)
 	var maxLength = 0
@@ -205,7 +205,7 @@ var L2 = &ListNode{
 	},
 }
 
-// 两个倒序链表相加
+// AddTwoNumbers 两个倒序链表相加
 func AddTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
 	res := &ListNode{}
 	curr := res
@@ -228,7 +228,7 @@ func AddTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
 	return res.Next
 }
 
-// 字符串内最长重复字串 滑窗
+// LengthOfLongestSubstring 字符串内最长重复字串 滑窗
 func LengthOfLongestSubstring(s string) int {
 	start, end := 0, 0
 	for i := 0; i < len(s); i++ {
@@ -245,7 +245,13 @@ func LengthOfLongestSubstring(s string) int {
 	return end - start
 }
 
-//  查找两个正序数组的中位数  给定两个大小为 m 和 n 的正序（从小到大）数组 nums1 和 nums2。请你找出并返回这两个正序数组的中位数。
+func FindMedianSortedArraysPractice() {
+	nums1 := []int{1, 3, 5}
+	nums2 := []int{4, 6, 7, 2, 4, 6, 7}
+	fmt.Println(FindMedianSortedArrays(nums1, nums2))
+}
+
+// FindMedianSortedArrays 查找两个正序数组的中位数  给定两个大小为 m 和 n 的正序（从小到大）数组 nums1 和 nums2。请你找出并返回这两个正序数组的中位数。
 func FindMedianSortedArrays(nums1 []int, nums2 []int) float64 {
 	sli := append(nums1, nums2...)
 	l := len(sli)
