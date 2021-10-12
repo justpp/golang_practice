@@ -1,7 +1,9 @@
 package main
 
-import "giao/util"
+import (
+	"fmt"
+)
 
 func main() {
-	util.SlicePractice()
+	fmt.Println("giao giao")
 }
