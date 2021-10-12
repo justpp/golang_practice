@@ -228,3 +228,17 @@ func CalcPractice() {
 	fmt.Println(c.Multi(3))
 	fmt.Println(c.Division(4))
 }
+
+func SlicePractice() {
+	arr := [...]int{
+		1, 2, 3, 54, 6, 7,
+	}
+	fmt.Printf("arr: %v v: %v t: %T", arr, arr[0:2:5], arr[:0:0])
+	fmt.Println()
+	// [low:high:max]
+	// low 从...开始
+	// high 到...
+	// max 容量  max > high - low
+
+	fmt.Println(cap(arr[0:2:5]))
+}

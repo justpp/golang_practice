@@ -1,11 +1,7 @@
 package main
 
-import (
-	"fmt"
-	"runtime"
-)
+import "giao/util"
 
 func main() {
-	n := runtime.NumCPU()
-	fmt.Println(n)
+	util.SlicePractice()
 }
