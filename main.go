@@ -1,6 +1,8 @@
 package main
 
-import "giao/util"
+import (
+	"giao/util"
+)
 
 func main() {
 	util.SlicePractice()
