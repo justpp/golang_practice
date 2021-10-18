@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
+	"giao/util"
 )
 
 func main() {
-	fmt.Println("giao giao")
+	util.ChanPractice()
 }

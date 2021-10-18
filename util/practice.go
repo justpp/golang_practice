@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"giao/calc"
+	"sync"
 	"time"
 )
 
@@ -241,4 +242,30 @@ func SlicePractice() {
 	// max 容量  max > high - low
 
 	fmt.Println(cap(arr[0:2:5]))
+}
+
+// GoroutinePractice 20211018 练习goroutine
+func GoroutinePractice() {
+	var w sync.WaitGroup
+	for i := 0; i < 10; i++ {
+		w.Add(1)
+		go func(i int) {
+			defer w.Done()
+			fmt.Println("i", i, 'i')
+		}(i)
+	}
+	w.Wait()
+}
+
+func ChanPractice() {
+	var w sync.WaitGroup
+	w.Add(1)
+	ch := make(chan int)
+	go func() {
+		ch <- 10
+
+		w.Done()
+	}()
+	fmt.Println("ch", <-ch)
+	w.Wait()
 }
