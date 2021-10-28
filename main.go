@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	util.ChanPractice()
+	util.NetHttpPractice()
 }

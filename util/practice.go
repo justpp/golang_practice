@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"giao/calc"
+	"net/http"
+	"os"
 	"sync"
 	"time"
 )
@@ -268,4 +270,83 @@ func ChanPractice() {
 	}()
 	fmt.Println("ch", <-ch)
 	w.Wait()
+}
+
+func SelectPractice() {
+	ch := make(chan int, 1)
+	for i := 0; i < 10; i++ {
+		fmt.Println("当前迭代：", i)
+		select {
+		case x := <-ch:
+			fmt.Println("取出", x)
+		case ch <- i:
+			fmt.Println("写入", i)
+		}
+	}
+}
+
+// StdinPractice 输入练习
+func StdinPractice() {
+	a := make([]byte, 6)
+	n, err := os.Stdin.Read(a)
+	if err != nil {
+		fmt.Println("err", err)
+	}
+	fmt.Println("n", n)
+	fmt.Printf("%v %s %T", a, a, a)
+}
+
+// 多路复用  select配合channel
+// *********************************
+func launch() {
+	fmt.Println("nuclear launch detected")
+}
+
+func commencingCountDown(canLunch chan int) {
+	c := time.Tick(1 * time.Second)
+	for countDown := 20; countDown > 0; countDown-- {
+		fmt.Println(countDown)
+		<-c
+	}
+	canLunch <- -1
+}
+
+func isAbort(abort chan int) {
+	os.Stdin.Read(make([]byte, 1))
+	abort <- -1
+}
+
+func SelectChanPractice() {
+	fmt.Println("Commencing countdown")
+
+	abort := make(chan int)
+	canLunch := make(chan int)
+	go isAbort(abort)
+	go commencingCountDown(canLunch)
+	select {
+	case <-canLunch:
+
+	case <-abort:
+		fmt.Println("Launch aborted!")
+		return
+	}
+	launch()
+}
+
+//**************************
+
+func NetHttpPractice() {
+	http.HandleFunc("/apiTest", func(writer http.ResponseWriter, request *http.Request) {
+		data := "<h3>aa</h3>"
+		_, err := fmt.Fprintln(writer, data)
+		if err != nil {
+			return
+		}
+		writer.Header().Set("content-type", "text/html")
+	})
+	err := http.ListenAndServe(":9191", nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 }
