@@ -1,12 +1,15 @@
 package util
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
 	"giao/calc"
+	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -349,4 +352,51 @@ func NetHttpPractice() {
 		fmt.Println(err)
 		return
 	}
+}
+
+func DownPic() {
+	// 图片以花瓣网的图片为例
+	//imgUrl := "http://hbimg.b0.upaiyun.com/32f065b3afb3fb36b75a5cbc90051b1050e1e6b6e199-Ml6q9F_fw320"
+	imgUrl := "https://qr.m.jd.com/show?appid=133&size=300&t="
+
+	res, err := http.Get(imgUrl)
+	if err != nil {
+		fmt.Println("A error occurred!")
+		return
+	}
+	// defer后的为延时操作，通常用来释放相关变量
+	defer res.Body.Close()
+
+	// 获得get请求响应的reader对象
+	reader := bufio.NewReaderSize(res.Body, 32*1024)
+
+	file, err := os.Create("./test.png")
+	if err != nil {
+		panic(err)
+	}
+	// 获得文件的writer对象
+	writer := bufio.NewWriter(file)
+	written, _ := io.Copy(writer, reader)
+	// 输出文件字节大小
+	fmt.Printf("Total length: %d", written)
+}
+
+func JdSign() {
+	//const url = "https://qr.m.jd.com/show?appid=133&size=300&t="
+	const url = "https://www.liwenzhou.com/images/qrcode_for_gzh.jpg"
+	//const redirectUrl = "https://passport.jd.com/new/login.aspx"
+	req, _ := http.NewRequest("get", url+strconv.Itoa(int(1000*time.Now().Unix())), nil)
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36")
+	req.Header.Set("Connection", "keep-alive")
+	//req.Header.Set("Referer", redirectUrl)
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3")
+	client := &http.Client{}
+	resp, _ := client.Do(req)
+	//reader := bufio.NewReaderSize(resp.Body, 32*1024)
+	f, err := os.Create("./qr_code.png")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	_, _ = io.Copy(f, resp.Body)
 }

@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	util.NetHttpPractice()
+	util.DownPic()
 }
