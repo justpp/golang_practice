@@ -3,12 +3,14 @@ package jd
 import (
 	"fmt"
 	"giao/util"
+	"github.com/tidwall/gjson"
 	"io"
 	"math/rand"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -21,6 +23,7 @@ type JD struct {
 	Accept      string // "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3"
 	JdCookie    []*http.Cookie
 	Client      *http.Client
+	Token       string
 }
 
 func JDInit() *JD {
@@ -94,6 +97,15 @@ func (j *JD) CheckScan() error {
 			return err
 		}
 		fmt.Println("check res", string(all))
+		respMsg := string(all)
+
+		n1 := strings.Index(respMsg, "(")
+		n2 := strings.Index(respMsg, ")")
+
+		json := gjson.Parse(string(all[n1+1 : n2]))
+		fmt.Println("json", json)
+
+		j.Token = json.Get("ticket").Str
 		resp.Body.Close()
 	}
 	fmt.Println("超时了")
@@ -101,7 +113,6 @@ func (j *JD) CheckScan() error {
 }
 
 func (j *JD) NewRequest(Method, URL string) (*http.Request, error) {
-
 	req, err := http.NewRequest(Method, URL, nil)
 	if err != nil {
 		return nil, err
@@ -113,6 +124,5 @@ func (j *JD) NewRequest(Method, URL string) (*http.Request, error) {
 	req.Header.Set("Connection", j.Connection)
 	req.Header.Set("Referer", j.Referer)
 	req.Header.Set("Accept", j.Accept)
-	fmt.Println(req.URL)
 	return req, nil
 }
