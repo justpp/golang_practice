@@ -1,9 +1,19 @@
 package main
 
 import (
-	"giao/util"
+	"fmt"
+	"giao/jd"
 )
 
 func main() {
-	util.DownPic()
+	j := jd.JDInit()
+	err := j.GetQrCode()
+	if err != nil {
+		fmt.Println("err", err)
+		return
+	}
+	err = j.CheckScan()
+	if err != nil {
+		return
+	}
 }
