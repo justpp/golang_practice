@@ -76,8 +76,8 @@ func DeferTestCalc(s string, a, b int) int {
 	return ret
 }
 
-// ClosurePractice 闭包函数作用域练习
-func ClosurePractice() {
+// PracticeClosure 闭包函数作用域练习
+func PracticeClosure() {
 	x := 1
 	y := 2
 	defer DeferTestCalc("AA", x, DeferTestCalc("A", x, y))
@@ -131,8 +131,8 @@ type student struct {
 	age  int
 }
 
-// StructPractice1 结构体练习
-func StructPractice1() {
+// PracticeStruct1 结构体练习
+func PracticeStruct1() {
 	m := make(map[string]*student)
 	stubs := []student{
 		{name: "小王子", age: 18},
@@ -164,8 +164,8 @@ type Stud struct {
 	Name   string
 }
 
-// StructJsonPractice 结构体转json练习
-func StructJsonPractice() {
+// PracticeStructJson 结构体转json练习
+func PracticeStructJson() {
 	c := &class{
 		"那一个班级",
 		make([]*Stud, 0, 10),
@@ -208,8 +208,8 @@ func (p *Person) SetDream(dreams []string) {
 	copy(p.dreams, dreams)
 }
 
-// StructPractice2 结构体 成员是引用类型  切片或map产生的问题
-func StructPractice2() {
+// PracticeStruct2 结构体 成员是引用类型  切片或map产生的问题
+func PracticeStruct2() {
 	p := &Person{
 		name: "那一个人",
 		age:  2,
@@ -226,8 +226,8 @@ func StructPractice2() {
 	fmt.Println(p)
 }
 
-// CalcPractice 加减乘除
-func CalcPractice() {
+// PracticeCalc 加减乘除
+func PracticeCalc() {
 	c := &calc.Calc{Num: 2}
 	fmt.Println(c.Sum(1))
 	fmt.Println(c.Sub(2))
@@ -235,7 +235,7 @@ func CalcPractice() {
 	fmt.Println(c.Division(4))
 }
 
-func SlicePractice() {
+func PracticeSlice() {
 	arr := [...]int{
 		1, 2, 3, 54, 6, 7,
 	}
@@ -249,8 +249,8 @@ func SlicePractice() {
 	fmt.Println(cap(arr[0:2:5]))
 }
 
-// GoroutinePractice 20211018 练习goroutine
-func GoroutinePractice() {
+// PracticeGoroutine 20211018 练习goroutine
+func PracticeGoroutine() {
 	var w sync.WaitGroup
 	for i := 0; i < 10; i++ {
 		w.Add(1)
@@ -262,7 +262,7 @@ func GoroutinePractice() {
 	w.Wait()
 }
 
-func ChanPractice() {
+func PracticeChan() {
 	var w sync.WaitGroup
 	w.Add(1)
 	ch := make(chan int)
@@ -275,7 +275,7 @@ func ChanPractice() {
 	w.Wait()
 }
 
-func SelectPractice() {
+func PracticeSelect() {
 	ch := make(chan int, 1)
 	for i := 0; i < 10; i++ {
 		fmt.Println("当前迭代：", i)
@@ -288,8 +288,8 @@ func SelectPractice() {
 	}
 }
 
-// StdinPractice 输入练习
-func StdinPractice() {
+// PracticeStdin 输入练习
+func PracticeStdin() {
 	a := make([]byte, 6)
 	n, err := os.Stdin.Read(a)
 	if err != nil {
@@ -319,7 +319,7 @@ func isAbort(abort chan int) {
 	abort <- -1
 }
 
-func SelectChanPractice() {
+func PracticeSelectChan() {
 	fmt.Println("Commencing countdown")
 
 	abort := make(chan int)
@@ -338,7 +338,7 @@ func SelectChanPractice() {
 
 //**************************
 
-func NetHttpPractice() {
+func PracticeNetHttp() {
 	http.HandleFunc("/apiTest", func(writer http.ResponseWriter, request *http.Request) {
 		data := "<h3>aa</h3>"
 		_, err := fmt.Fprintln(writer, data)
@@ -411,7 +411,7 @@ func add(x *int, wg *sync.WaitGroup, lock *sync.Mutex) {
 	wg.Done()
 }
 
-func GoPractice() {
+func PracticeGo() {
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
 	var x int
@@ -426,12 +426,27 @@ func GoPractice() {
 type Singleton struct {
 }
 
+var singleton *Singleton
 var one = new(sync.Once)
 
-func SyncSingleton() *Singleton {
-	var singleton *Singleton
+// PracticeSyncSingleton 单例
+func PracticeSyncSingleton() *Singleton {
 	one.Do(func() {
+		fmt.Println("Create Obj")
 		singleton = &Singleton{}
 	})
 	return singleton
+}
+
+// PracticeSelect2 示例多路复用
+func PracticeSelect2() {
+	ch := make(chan int, 1)
+	for i := 0; i < 10; i++ {
+		select {
+		case x := <-ch:
+			fmt.Println("out", x)
+		case ch <- i:
+			fmt.Println("in", i)
+		}
+	}
 }
