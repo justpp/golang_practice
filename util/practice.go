@@ -401,3 +401,37 @@ func DownLoadImg(body io.Reader, fileName string) {
 	}
 	fmt.Println("length", write)
 }
+
+func add(x *int, wg *sync.WaitGroup, lock *sync.Mutex) {
+	for i := 0; i < 5000; i++ {
+		lock.Lock()
+		*x = *x + 1
+		lock.Unlock()
+	}
+	wg.Done()
+}
+
+func GoPractice() {
+	wg := &sync.WaitGroup{}
+	wg.Add(2)
+	var x int
+	var lock = new(sync.Mutex)
+
+	go add(&x, wg, lock)
+	go add(&x, wg, lock)
+	wg.Wait()
+	fmt.Println(x)
+}
+
+type Singleton struct {
+}
+
+var one = new(sync.Once)
+
+func SyncSingleton() *Singleton {
+	var singleton *Singleton
+	one.Do(func() {
+		singleton = &Singleton{}
+	})
+	return singleton
+}

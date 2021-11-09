@@ -15,15 +15,30 @@ import (
 )
 
 type JD struct {
-	QrCodeURl   string // "https://qr.m.jd.com/show" ?appid=133&size=300&t=
-	CheckSanUrl string // "https://qr.m.jd.com/check"
-	Referer     string // "https://passport.jd.com/new/login.aspx"
-	UserAgent   string // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36"
-	Connection  string // "keep-alive"
-	Accept      string // "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3"
-	JdCookie    []*http.Cookie
-	Client      *http.Client
-	Token       string
+	QrCodeURl    string // "https://qr.m.jd.com/show" ?appid=133&size=300&t=
+	CheckSanUrl  string // "https://qr.m.jd.com/check"
+	CheckTickUrl string // "https://passport.jd.com/uc/qrCodeTicketValidation?"
+	Referer      string // "https://passport.jd.com/new/login.aspx"
+	UserAgent    string // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36"
+	Connection   string // "keep-alive"
+	Accept       string // "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3"
+	JdCookie     []*http.Cookie
+	Client       *http.Client
+	Ticket       string
+}
+
+// JDLogin
+func JDLogin() {
+	j := JDInit()
+	err := j.GetQrCode()
+	if err != nil {
+		fmt.Println("err", err)
+		return
+	}
+	err = j.CheckScan()
+	if err != nil {
+		return
+	}
 }
 
 func JDInit() *JD {
@@ -105,7 +120,7 @@ func (j *JD) CheckScan() error {
 		json := gjson.Parse(string(all[n1+1 : n2]))
 		fmt.Println("json", json)
 
-		j.Token = json.Get("ticket").Str
+		j.Ticket = json.Get("ticket").Str
 		resp.Body.Close()
 	}
 	fmt.Println("超时了")

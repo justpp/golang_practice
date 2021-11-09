@@ -1,19 +1,7 @@
 package main
 
-import (
-	"fmt"
-	"giao/jd"
-)
+import "giao/util"
 
 func main() {
-	j := jd.JDInit()
-	err := j.GetQrCode()
-	if err != nil {
-		fmt.Println("err", err)
-		return
-	}
-	err = j.CheckScan()
-	if err != nil {
-		return
-	}
+	util.GoPractice()
 }
