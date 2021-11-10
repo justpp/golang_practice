@@ -1,9 +1,9 @@
 package main
 
 import (
-	"giao/util"
+	"giao/jd"
 )
 
 func main() {
-	util.PracticeSlice2()
+	jd.JDLogin()
 }
