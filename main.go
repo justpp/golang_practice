@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	util.PracticeSelect2()
+	util.PracticeSlice2()
 }

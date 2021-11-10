@@ -450,3 +450,24 @@ func PracticeSelect2() {
 		}
 	}
 }
+
+func sliceAdd(s []int) {
+	s3 := s
+	s3 = append(s3, 0)
+	s = append(s, s3...)
+	for i := range s {
+		s[i]++
+	}
+	fmt.Println("s_add", s)
+}
+
+func PracticeSlice2() {
+	s1 := []int{1, 2}
+	s2 := s1
+	s2 = append(s2, 3)
+	sliceAdd(s1)
+	sliceAdd(s2)
+	fmt.Println(s1)
+	fmt.Println(s2)
+
+}
