@@ -26,6 +26,7 @@ type JD struct {
 	JdCookie   []*http.Cookie
 	Client     *http.Client
 	Ticket     string
+	IsLogin    bool
 }
 
 type Url struct {
@@ -35,12 +36,57 @@ type Url struct {
 	CheckTick    string // "https://passport.jd.com/uc/qrCodeTicketValidation?"
 	ValidateTick string // https://passport.jd.com/uc/qrCodeTicketValidation?
 	GetUserInfo  string // "https://passport.jd.com/user/petName/getUserInfoForMiniJd.action?"
-	CenterList   string //"https://order.jd.com/center/list.action"
+	CenterList   string // "https://order.jd.com/center/list.action"
+	Jd           string // "https://www.jd.com"
 }
 
 // JDLogin
 func JDLogin() {
-	j := JDInit()
+	j := JdInit()
+	err := j.LoadCookie()
+	if err != nil {
+		fmt.Println("load cookie err", err)
+		return
+	}
+	fmt.Println("cookie", j.Client.Jar.Cookies())
+	isLogin, err := j.validateCookies()
+	if err != nil {
+		fmt.Println("err ", err)
+		return
+	}
+	if !isLogin {
+		fmt.Println("cookie 失效")
+		j.QrCodeLogin()
+	}
+	fmt.Println("登录了？")
+}
+
+func JdInit() *JD {
+	jdUrl := Url{
+		"https://passport.jd.com/new/login.aspx",
+		"https://qr.m.jd.com/show",
+		"https://qr.m.jd.com/check",
+		"https://passport.jd.com/uc/qrCodeTicketValidation?",
+		"https://passport.jd.com/uc/qrCodeTicketValidation?",
+		"https://passport.jd.com/user/petName/getUserInfoForMiniJd.action?",
+		"https://order.jd.com/center/list.action",
+		"https://www.jd.com",
+	}
+	j := &JD{
+		Url:        jdUrl,
+		UserAgent:  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
+		Connection: "keep-alive",
+		Accept:     "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
+	}
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		return nil
+	}
+	j.Client = &http.Client{Jar: jar}
+	return j
+}
+
+func (j *JD) QrCodeLogin() {
 	err := j.GetQrCode()
 	if err != nil {
 		fmt.Println("err", err)
@@ -63,31 +109,6 @@ func JDLogin() {
 		return
 	}
 	fmt.Println("info", info)
-
-}
-
-func JDInit() *JD {
-	jdUrl := Url{
-		"https://passport.jd.com/new/login.aspx",
-		"https://qr.m.jd.com/show",
-		"https://qr.m.jd.com/check",
-		"https://passport.jd.com/uc/qrCodeTicketValidation?",
-		"https://passport.jd.com/uc/qrCodeTicketValidation?",
-		"https://passport.jd.com/user/petName/getUserInfoForMiniJd.action?",
-		"https://order.jd.com/center/list.action",
-	}
-	j := &JD{
-		Url:        jdUrl,
-		UserAgent:  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
-		Connection: "keep-alive",
-		Accept:     "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
-	}
-	jar, err := cookiejar.New(nil)
-	if err != nil {
-		return nil
-	}
-	j.Client = &http.Client{Jar: jar}
-	return j
 }
 
 func (j *JD) GetQrCode() error {
@@ -158,7 +179,6 @@ func (j *JD) CheckScan() error {
 			break
 		}
 	}
-	fmt.Println("超时了")
 	return nil
 }
 
@@ -179,17 +199,10 @@ func (j *JD) ValidateQrCodeTick(tick string) (bool, error) {
 		return false, err
 	}
 	fmt.Println("check res", string(all))
-	//respMsg := string(all)
-	//
-	//n1 := strings.Index(respMsg, "(")
-	//n2 := strings.Index(respMsg, ")")
-	//
-	//json := gjson.Parse(string(all[n1+1 : n2]))
-	//fmt.Println("json", json)
 	return true, nil
 }
 
-func (j JD) GetUserInfo(SaveCookie func(cookies []*http.Cookie) error) (string, error) {
+func (j *JD) GetUserInfo(SaveCookie func(cookies []*http.Cookie) error) (string, error) {
 	u := j.createUrlWithArgs(j.Url.GetUserInfo, map[string]string{
 		"callback": fmt.Sprintf("jQuery%v", rand.Intn(9999999-1000000)+1000000),
 		"_":        fmt.Sprintf("%v", time.Now().Unix()*1e3),
@@ -205,8 +218,8 @@ func (j JD) GetUserInfo(SaveCookie func(cookies []*http.Cookie) error) (string, 
 	all, _ := ioutil.ReadAll(resp.Body)
 	ret := gjson.Parse(string(all[14 : len(all)-1]))
 	fmt.Println("ret", ret)
-	fmt.Println("cookies", resp.Cookies())
-	err = SaveCookie(resp.Cookies())
+	fmt.Println("cookies", req.Cookies())
+	err = SaveCookie(req.Cookies())
 	if err != nil {
 		return "", err
 	}
@@ -245,4 +258,53 @@ func (j *JD) SaveCookie(cookies []*http.Cookie) error {
 		return err
 	}
 	return nil
+}
+
+func (j *JD) LoadCookie() error {
+	var cookies []*http.Cookie
+	_, err := os.Stat("./cookies")
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = os.Mkdir("./cookies", os.ModePerm)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	cookiesFile := path.Join("./cookies", fmt.Sprintf("%s.json", "cookie"))
+	cookiesByte, err := ioutil.ReadFile(cookiesFile)
+	if err != nil {
+		return err
+	}
+	fmt.Println()
+	u, err := url.Parse(j.Url.Jd)
+	err = jsoniter.Unmarshal(cookiesByte, &cookies)
+	if err != nil {
+		return err
+	}
+	fmt.Println("cookie", cookies)
+	j.Client.Jar.SetCookies(u, cookies)
+	j.IsLogin, err = j.validateCookies()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (j *JD) validateCookies() (bool, error) {
+	u := j.createUrlWithArgs(j.Url.CenterList, map[string]string{})
+	req, err := j.NewRequestWithHead(http.MethodGet, u, map[string]string{"Referer": j.Url.Login})
+	if err != nil {
+		return false, err
+	}
+	resp, err := j.Client.Do(req)
+	if err != nil {
+		return false, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return false, nil
+	}
+	return true, nil
 }
