@@ -48,7 +48,6 @@ func JDLogin() {
 		fmt.Println("load cookie err", err)
 		return
 	}
-	fmt.Println("cookie", j.Client.Jar.Cookies())
 	isLogin, err := j.validateCookies()
 	if err != nil {
 		fmt.Println("err ", err)
