@@ -57,7 +57,10 @@ func JDLogin() {
 		fmt.Println("cookie 失效")
 		j.QrCodeLogin()
 	}
-	fmt.Println("登录了？")
+	err = j.GetItemDetailPage()
+	if err != nil {
+		return
+	}
 }
 
 func JdInit() *JD {
@@ -156,6 +159,7 @@ func (j *JD) CheckScan() error {
 		}
 		resp, _ := j.Client.Do(req)
 		defer resp.Body.Close()
+
 		if err != nil {
 			return err
 		}
@@ -203,6 +207,7 @@ func (j *JD) ValidateQrCodeTick(tick string) (bool, error) {
 
 func (j *JD) GetUserInfo(SaveCookie func(cookies []*http.Cookie) error) (string, error) {
 	u := j.createUrlWithArgs(j.Url.GetUserInfo, map[string]string{
+		"appid":    "133",
 		"callback": fmt.Sprintf("jQuery%v", rand.Intn(9999999-1000000)+1000000),
 		"_":        fmt.Sprintf("%v", time.Now().Unix()*1e3),
 	})
@@ -210,14 +215,18 @@ func (j *JD) GetUserInfo(SaveCookie func(cookies []*http.Cookie) error) (string,
 	if err != nil {
 		return "", err
 	}
+
+	fmt.Println("cookie before", req.Cookies())
 	resp, err := j.Client.Do(req)
+	fmt.Println("cookie after", req.Cookies())
+
 	if err != nil {
 		return "", err
 	}
 	all, _ := ioutil.ReadAll(resp.Body)
 	ret := gjson.Parse(string(all[14 : len(all)-1]))
-	fmt.Println("ret", ret)
-	fmt.Println("cookies", req.Cookies())
+	fmt.Println("get userinfo ", ret)
+
 	err = SaveCookie(req.Cookies())
 	if err != nil {
 		return "", err
@@ -277,30 +286,35 @@ func (j *JD) LoadCookie() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println()
-	u, err := url.Parse(j.Url.Jd)
 	err = jsoniter.Unmarshal(cookiesByte, &cookies)
 	if err != nil {
 		return err
 	}
-	fmt.Println("cookie", cookies)
+	j.JdCookie = cookies
+	u, _ := url.Parse(j.Url.Jd)
 	j.Client.Jar.SetCookies(u, cookies)
-	j.IsLogin, err = j.validateCookies()
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
 func (j *JD) validateCookies() (bool, error) {
-	u := j.createUrlWithArgs(j.Url.CenterList, map[string]string{})
+	u := j.createUrlWithArgs(j.Url.GetUserInfo, map[string]string{})
 	req, err := j.NewRequestWithHead(http.MethodGet, u, map[string]string{"Referer": j.Url.Login})
 	if err != nil {
 		return false, err
 	}
+	j.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
 	resp, err := j.Client.Do(req)
+	defer resp.Body.Close()
 	if err != nil {
 		return false, err
+	}
+	all, _ := ioutil.ReadAll(resp.Body)
+	json := gjson.Parse(string(all))
+	nickName := json.Get("nickName").Str
+	if nickName != "" {
+		fmt.Println(nickName, "已登录")
 	}
 	if resp.StatusCode != http.StatusOK {
 		return false, nil
