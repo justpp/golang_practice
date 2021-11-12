@@ -2,12 +2,13 @@ package jd
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 )
 
-func (j *JD) NewRequestWithHead(Method, URL string, HeaderMap map[string]string) (*http.Request, error) {
+func (j *JD) NewRequestWithHead(Method, URL string, HeaderMap map[string]string, body io.Reader) (*http.Request, error) {
 	req, err := http.NewRequest(Method, URL, nil)
 	if err != nil {
 		return nil, err
@@ -36,23 +37,19 @@ func MapDefaultVal(m map[string]string, k, defaultVal string) string {
 }
 
 func (j *JD) GetItemDetailPage() error {
-	u := j.createUrlWithArgs("https://cart.jd.com/gate.action?",
-		map[string]string{
-			"pid":    "1179553",
-			"pcount": "1",
-			"ptype":  "1",
-		})
-	req, err := j.NewRequestWithHead(http.MethodGet, u, map[string]string{"Referer": j.Url.CenterList})
+	u := j.createUrlWithArgs("https://api.m.jd.com/client.action?functionId=signBeanIndex&appid=ld", map[string]string{})
+
+	req, err := j.NewRequestWithHead(http.MethodGet, u, map[string]string{}, nil)
 	if err != nil {
 		return err
 	}
-	resp, _ := j.Client.Do(req)
+	resp, err := j.Client.Do(req)
+	if err != nil {
+		fmt.Println("err", err)
+		return err
+	}
 	defer resp.Body.Close()
-	if err != nil {
-		return err
-	}
 	all, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("item info", all)
-	fmt.Println("item state", resp.Status)
+	fmt.Println("item info", string(all))
 	return nil
 }

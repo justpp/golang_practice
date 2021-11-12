@@ -119,7 +119,7 @@ func (j *JD) GetQrCode() error {
 	args.Add("size", "300")
 	args.Add("t", strconv.FormatInt(time.Now().Unix()*1e3, 10))
 	u := j.Url.QrCode + "?" + args.Encode()
-	req, err := j.NewRequestWithHead(http.MethodGet, u, map[string]string{})
+	req, err := j.NewRequestWithHead(http.MethodGet, u, map[string]string{}, nil)
 	if err != nil {
 		fmt.Println("new url err", err)
 		return err
@@ -153,7 +153,7 @@ func (j *JD) CheckScan() error {
 		args.Add("token", token)
 		args.Add("_", strconv.FormatInt(1e3*time.Now().Unix(), 10))
 		u := j.Url.CheckSan + "?" + args.Encode()
-		req, err := j.NewRequestWithHead("GET", u, map[string]string{})
+		req, err := j.NewRequestWithHead("GET", u, map[string]string{}, nil)
 		if err != nil {
 			return err
 		}
@@ -187,7 +187,7 @@ func (j *JD) CheckScan() error {
 
 func (j *JD) ValidateQrCodeTick(tick string) (bool, error) {
 	u := j.createUrlWithArgs(j.Url.ValidateTick, map[string]string{"t": tick})
-	req, err := j.NewRequestWithHead(http.MethodGet, u, map[string]string{"Referer": "https://passport.jd.com/uc/login?ltype=logout"})
+	req, err := j.NewRequestWithHead(http.MethodGet, u, map[string]string{"Referer": "https://passport.jd.com/uc/login?ltype=logout"}, nil)
 	if err != nil {
 		return false, err
 	}
@@ -211,7 +211,7 @@ func (j *JD) GetUserInfo(SaveCookie func(cookies []*http.Cookie) error) (string,
 		"callback": fmt.Sprintf("jQuery%v", rand.Intn(9999999-1000000)+1000000),
 		"_":        fmt.Sprintf("%v", time.Now().Unix()*1e3),
 	})
-	req, err := j.NewRequestWithHead(http.MethodGet, u, map[string]string{"Referer": j.Url.CenterList})
+	req, err := j.NewRequestWithHead(http.MethodGet, u, map[string]string{"Referer": j.Url.CenterList}, nil)
 	if err != nil {
 		return "", err
 	}
@@ -298,7 +298,7 @@ func (j *JD) LoadCookie() error {
 
 func (j *JD) validateCookies() (bool, error) {
 	u := j.createUrlWithArgs(j.Url.GetUserInfo, map[string]string{})
-	req, err := j.NewRequestWithHead(http.MethodGet, u, map[string]string{"Referer": j.Url.Login})
+	req, err := j.NewRequestWithHead(http.MethodGet, u, map[string]string{"Referer": j.Url.Login}, nil)
 	if err != nil {
 		return false, err
 	}
