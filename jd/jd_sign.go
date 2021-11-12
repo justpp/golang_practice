@@ -119,7 +119,7 @@ func (j *JD) GetQrCode() error {
 	args.Add("size", "300")
 	args.Add("t", strconv.FormatInt(time.Now().Unix()*1e3, 10))
 	u := j.Url.QrCode + "?" + args.Encode()
-	req, err := j.NewRequestWithHead(http.MethodGet, u, map[string]string{}, nil)
+	req, err := j.NewRequestWithHead(http.MethodGet, u, nil, nil)
 	if err != nil {
 		fmt.Println("new url err", err)
 		return err
@@ -297,7 +297,7 @@ func (j *JD) LoadCookie() error {
 }
 
 func (j *JD) validateCookies() (bool, error) {
-	u := j.createUrlWithArgs(j.Url.GetUserInfo, map[string]string{})
+	u := j.createUrlWithArgs(j.Url.GetUserInfo, nil)
 	req, err := j.NewRequestWithHead(http.MethodGet, u, map[string]string{"Referer": j.Url.Login}, nil)
 	if err != nil {
 		return false, err
