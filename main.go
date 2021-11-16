@@ -1,8 +1,6 @@
 package main
 
-import (
-	"giao/jd"
-)
+import "giao/jd"
 
 func main() {
 	jd.JDLogin()

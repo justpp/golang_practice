@@ -43,7 +43,11 @@ type Url struct {
 // JDLogin
 func JDLogin() {
 	j := JdInit()
-	err := j.LoadCookie()
+	err := CookieStr2Json()
+	if err != nil {
+		return
+	}
+	err = j.LoadCookie()
 	if err != nil {
 		fmt.Println("load cookie err", err)
 		return
@@ -106,7 +110,7 @@ func (j *JD) QrCodeLogin() {
 	if !ok {
 		fmt.Println("扫描未通过")
 	}
-	info, err := j.GetUserInfo(j.SaveCookie)
+	info, err := j.GetUserInfo(SaveCookie)
 	if err != nil {
 		return
 	}
@@ -235,7 +239,7 @@ func (j *JD) GetUserInfo(SaveCookie func(cookies []*http.Cookie) error) (string,
 	return "", nil
 }
 
-func (j *JD) SaveCookie(cookies []*http.Cookie) error {
+func SaveCookie(cookies []*http.Cookie) error {
 	_, err := os.Stat("./cookies")
 	if err != nil {
 		if os.IsNotExist(err) {
