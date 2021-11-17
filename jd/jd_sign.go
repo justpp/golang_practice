@@ -278,6 +278,7 @@ func (j *JD) LoadCookie() error {
 			return err
 		}
 	}
+	// 从cookie.txt中读取cookie处理后存入cookie.json
 	err = CookieStr2Json()
 	if err != nil {
 		return err
