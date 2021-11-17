@@ -40,14 +40,10 @@ type Url struct {
 	Jd           string // "https://www.jd.com"
 }
 
-// JDLogin
-func JDLogin() {
+func Login() {
 	j := JdInit()
-	err := CookieStr2Json()
-	if err != nil {
-		return
-	}
-	err = j.LoadCookie()
+
+	err := j.LoadCookie()
 	if err != nil {
 		fmt.Println("load cookie err", err)
 		return
@@ -61,10 +57,11 @@ func JDLogin() {
 		fmt.Println("cookie 失效")
 		j.QrCodeLogin()
 	}
-	err = j.GetItemDetailPage()
+	err = j.JDBean()
 	if err != nil {
 		return
 	}
+	fmt.Println("签到结束")
 }
 
 func JdInit() *JD {
@@ -219,11 +216,7 @@ func (j *JD) GetUserInfo(SaveCookie func(cookies []*http.Cookie) error) (string,
 	if err != nil {
 		return "", err
 	}
-
-	fmt.Println("cookie before", req.Cookies())
 	resp, err := j.Client.Do(req)
-	fmt.Println("cookie after", req.Cookies())
-
 	if err != nil {
 		return "", err
 	}
@@ -285,6 +278,10 @@ func (j *JD) LoadCookie() error {
 			return err
 		}
 	}
+	err = CookieStr2Json()
+	if err != nil {
+		return err
+	}
 	cookiesFile := path.Join("./cookies", fmt.Sprintf("%s.json", "cookie"))
 	cookiesByte, err := ioutil.ReadFile(cookiesFile)
 	if err != nil {
@@ -301,7 +298,16 @@ func (j *JD) LoadCookie() error {
 }
 
 func (j *JD) validateCookies() (bool, error) {
-	u := j.createUrlWithArgs(j.Url.GetUserInfo, nil)
+	var infoUrl string
+	var nickNamePath string
+	if j.JdCookie[0].Name == "wlfstk_smdl" {
+		infoUrl = j.Url.GetUserInfo
+		nickNamePath = "nickName"
+	} else {
+		infoUrl = "https://me-api.jd.com/user_new/info/GetJDUserInfoUnion?"
+		nickNamePath = "data.userInfo.baseInfo.nickname"
+	}
+	u := j.createUrlWithArgs(infoUrl, nil)
 	req, err := j.NewRequestWithHead(http.MethodGet, u, map[string]string{"Referer": j.Url.Login}, nil)
 	if err != nil {
 		return false, err
@@ -316,7 +322,8 @@ func (j *JD) validateCookies() (bool, error) {
 	}
 	all, _ := ioutil.ReadAll(resp.Body)
 	json := gjson.Parse(string(all))
-	nickName := json.Get("nickName").Str
+
+	nickName := json.Get(nickNamePath).Str
 	if nickName != "" {
 		fmt.Println(nickName, "已登录")
 	}
