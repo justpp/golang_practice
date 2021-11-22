@@ -3,3 +3,5 @@
 /log/
 go.sum
 /qr_code.png
+/cookies/cookie.json
+/cookies/cookie.txt

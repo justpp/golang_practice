@@ -1,6 +1,7 @@
 package jd
 
 import (
+	"errors"
 	"fmt"
 	"giao/util"
 	jsoniter "github.com/json-iterator/go"
@@ -323,7 +324,9 @@ func (j *JD) validateCookies() (bool, error) {
 	}
 	all, _ := ioutil.ReadAll(resp.Body)
 	json := gjson.Parse(string(all))
-
+	if json.Get("msg").Str == "not login" {
+		return false, errors.New("cookie 失效，未登录")
+	}
 	nickName := json.Get(nickNamePath).Str
 	if nickName != "" {
 		fmt.Println(nickName, "已登录")
