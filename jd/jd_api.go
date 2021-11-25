@@ -23,6 +23,9 @@ func (j *JD) JDBean() error {
 	all, _ := ioutil.ReadAll(resp.Body)
 	json := gjson.Parse(string(all))
 	daily := json.Get("data.dailyAward")
+	if !daily.Exists() {
+		daily = json.Get("data.continuityAward")
+	}
 	fmt.Println("签到领京豆", daily.Get("title").Str, "获得", daily.Get("beanAward.beanCount"), "个京豆")
 	return nil
 }
