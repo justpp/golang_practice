@@ -20,14 +20,15 @@ import (
 )
 
 type JD struct {
-	Url        Url
-	UserAgent  string // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36"
-	Connection string // "keep-alive"
-	Accept     string // "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3"
-	JdCookie   []*http.Cookie
-	Client     *http.Client
-	Ticket     string
-	IsLogin    bool
+	Url         Url
+	UserAgent   string // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36"
+	Connection  string // "keep-alive"
+	Accept      string // "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3"
+	JdCookie    []*http.Cookie
+	JdCookieMap map[int][]*http.Cookie
+	Client      *http.Client
+	Ticket      string
+	IsLogin     bool
 }
 
 type Url struct {
@@ -49,20 +50,26 @@ func Login() {
 		fmt.Println("load cookie err", err)
 		return
 	}
-	isLogin, err := j.validateCookies()
-	if err != nil {
-		fmt.Println("err ", err)
-		return
+	for _, cookies := range j.JdCookieMap {
+		j.JdCookie = cookies
+		u, _ := url.Parse(j.Url.Jd)
+		j.Client.Jar.SetCookies(u, cookies)
+		isLogin, err := j.validateCookies()
+		if err != nil {
+			fmt.Println("err ", err)
+			return
+		}
+		if !isLogin {
+			fmt.Println("cookie 失效")
+			j.QrCodeLogin()
+		}
+		err = j.JDBean()
+		if err != nil {
+			return
+		}
+		fmt.Println("签到结束")
 	}
-	if !isLogin {
-		fmt.Println("cookie 失效")
-		j.QrCodeLogin()
-	}
-	err = j.JDBean()
-	if err != nil {
-		return
-	}
-	fmt.Println("签到结束")
+
 }
 
 func JdInit() *JD {
@@ -264,7 +271,7 @@ func SaveCookie(cookies map[int][]*http.Cookie) error {
 }
 
 func (j *JD) LoadCookie() error {
-	var cookies []*http.Cookie
+	var cookies map[int][]*http.Cookie
 	_, err := os.Stat("./cookies")
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -290,9 +297,9 @@ func (j *JD) LoadCookie() error {
 	if err != nil {
 		return err
 	}
-	j.JdCookie = cookies
-	u, _ := url.Parse(j.Url.Jd)
-	j.Client.Jar.SetCookies(u, cookies)
+	j.JdCookieMap = cookies
+	//u, _ := url.Parse(j.Url.Jd)
+	//j.Client.Jar.SetCookies(u, cookies)
 	return nil
 }
 

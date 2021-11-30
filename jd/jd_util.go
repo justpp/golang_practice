@@ -61,17 +61,20 @@ func CookieStr2Json() error {
 		if err != nil {
 			break
 		}
-		for _, i := range strings.Split(lineStr, ";") {
+		var cookies []*http.Cookie
+		for _, i := range strings.Split(strings.TrimSpace(lineStr), ";") {
 			s := strings.Split(i, "=")
 			name := s[0]
 			val := s[1]
-			cookiesArr[count] = append(cookiesArr[count], &http.Cookie{
+
+			cookies = append(cookies, &http.Cookie{
 				Name:   name,
 				Value:  val,
 				Domain: ".jd.com",
 				Path:   "/",
 			})
 		}
+		cookiesArr[count] = cookies
 		count++
 	}
 	err = SaveCookie(cookiesArr)
