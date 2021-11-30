@@ -207,7 +207,7 @@ func (j *JD) ValidateQrCodeTick(tick string) (bool, error) {
 	return true, nil
 }
 
-func (j *JD) GetUserInfo(SaveCookie func(cookies []*http.Cookie) error) (string, error) {
+func (j *JD) GetUserInfo(SaveCookie func(cookies map[int][]*http.Cookie) error) (string, error) {
 	u := j.createUrlWithArgs(j.Url.GetUserInfo, map[string]string{
 		"appid":    "133",
 		"callback": fmt.Sprintf("jQuery%v", rand.Intn(9999999-1000000)+1000000),
@@ -224,8 +224,9 @@ func (j *JD) GetUserInfo(SaveCookie func(cookies []*http.Cookie) error) (string,
 	all, _ := ioutil.ReadAll(resp.Body)
 	ret := gjson.Parse(string(all[14 : len(all)-1]))
 	fmt.Println("get userinfo ", ret)
-
-	err = SaveCookie(req.Cookies())
+	m := make(map[int][]*http.Cookie)
+	m[0] = req.Cookies()
+	err = SaveCookie(m)
 	if err != nil {
 		return "", err
 	}
@@ -233,7 +234,7 @@ func (j *JD) GetUserInfo(SaveCookie func(cookies []*http.Cookie) error) (string,
 	return "", nil
 }
 
-func SaveCookie(cookies []*http.Cookie) error {
+func SaveCookie(cookies map[int][]*http.Cookie) error {
 	_, err := os.Stat("./cookies")
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -251,10 +252,6 @@ func SaveCookie(cookies []*http.Cookie) error {
 		return err
 	}
 	defer f.Close()
-	for _, cookie := range cookies {
-		cookie.Domain = ".jd.com"
-		cookie.Path = "/"
-	}
 	cookiesByte, err := jsoniter.Marshal(cookies)
 	if err != nil {
 		return err

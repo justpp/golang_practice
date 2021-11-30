@@ -1,9 +1,9 @@
 package jd
 
 import (
+	"bufio"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -49,24 +49,32 @@ func CookieStr2Json() error {
 			return err
 		}
 	}
-	cookiesByte, err := ioutil.ReadFile(str)
+	file, err := os.Open("./cookies/cookie.txt")
 	if err != nil {
 		return err
 	}
-	var cookies []*http.Cookie
-
-	for _, i := range strings.Split(string(cookiesByte), ";") {
-		s := strings.Split(i, "=")
-		name := s[0]
-		val := s[1]
-		cookies = append(cookies, &http.Cookie{
-			Name:   name,
-			Value:  val,
-			Domain: ".jd.com",
-			Path:   "/",
-		})
+	reader := bufio.NewReader(file)
+	var cookiesArr = make(map[int][]*http.Cookie)
+	var count int
+	for {
+		lineStr, err := reader.ReadString('\n')
+		if err != nil {
+			break
+		}
+		for _, i := range strings.Split(lineStr, ";") {
+			s := strings.Split(i, "=")
+			name := s[0]
+			val := s[1]
+			cookiesArr[count] = append(cookiesArr[count], &http.Cookie{
+				Name:   name,
+				Value:  val,
+				Domain: ".jd.com",
+				Path:   "/",
+			})
+		}
+		count++
 	}
-	err = SaveCookie(cookies)
+	err = SaveCookie(cookiesArr)
 	if err != nil {
 		return err
 	}
