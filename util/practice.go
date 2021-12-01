@@ -469,5 +469,25 @@ func PracticeSlice2() {
 	sliceAdd(s2)
 	fmt.Println(s1)
 	fmt.Println(s2)
+}
 
+func PracticeChan2() {
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	c := make(chan int, 1)
+	go func(a, b int, c chan int) {
+		sum := a + b
+		c <- sum
+		fmt.Println(sum)
+		wg.Done()
+	}(7, 2, c)
+	go func(a, b int, c chan int) {
+		sum := a + b
+		c <- sum
+		fmt.Println(sum)
+		wg.Done()
+	}(-8, 5, c)
+	x, y := <-c, <-c
+	fmt.Println(x + y)
+	wg.Wait()
 }
