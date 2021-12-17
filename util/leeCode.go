@@ -2,7 +2,9 @@ package util
 
 import (
 	"fmt"
+	"os"
 	"strings"
+	"time"
 )
 
 // TwoSumReturnK 二维切片中两数之和 返回下标
@@ -266,4 +268,28 @@ func FindMedianSortedArrays(nums1 []int, nums2 []int) float64 {
 		return float64(sli[l/2]+sli[l/2-1]) / 2
 	}
 	return float64(sli[l/2])
+}
+
+func PracticeFmt() {
+	fmt.Fprintln(os.Stdout, "giaogiaog")
+}
+
+func PracticeTime() {
+	now := time.Now()
+	fmt.Println(now.Format("2006-01-02 15:04:05 Mon Jan"))
+
+	// 加载时区
+	location, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		return
+	}
+	inLocation, err := time.ParseInLocation("2006-01-02 15:04:05", "2019-01-02 15:04:05", location)
+	if err != nil {
+		return
+	}
+	fmt.Println(inLocation)
+	end := time.Now()
+	fmt.Println(inLocation.Sub(now))
+
+	fmt.Println("耗时", end.Sub(now).Microseconds())
 }
