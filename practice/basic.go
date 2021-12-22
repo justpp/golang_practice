@@ -425,21 +425,6 @@ func PracticeGo() {
 	fmt.Println(x)
 }
 
-type Singleton struct {
-}
-
-var singleton *Singleton
-var one = new(sync.Once)
-
-// PracticeSyncSingleton 单例
-func PracticeSyncSingleton() *Singleton {
-	one.Do(func() {
-		fmt.Println("Create Obj")
-		singleton = &Singleton{}
-	})
-	return singleton
-}
-
 // PracticeSelect2 示例多路复用
 func PracticeSelect2() {
 	ch := make(chan int, 1)
