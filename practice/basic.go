@@ -1,13 +1,15 @@
-package util
+package practice
 
 import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
-	"giao/calc"
+	"giao/util/calc"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"sync"
@@ -490,4 +492,51 @@ func PracticeChan2() {
 	x, y := <-c, <-c
 	fmt.Println(x + y)
 	wg.Wait()
+}
+
+func PracticeFlag() {
+	var name string
+	flag.StringVar(&name, "name", "张三", "姓名")
+	flag.Parse()
+	fmt.Println(name)
+}
+
+func PracticeLog() {
+	logFile, err := os.OpenFile("./log/test.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		fmt.Println("open log file failed, err:", err)
+		return
+	}
+	log.SetOutput(logFile)
+	log.Println("giaogiao")
+	log.SetFlags(log.Llongfile | log.Lmicroseconds | log.Ldate)
+	log.SetPrefix("[justpp]")
+	log.Println("这是一条很普通的日志。")
+}
+
+func PracticeFile() {
+	file, err := os.Open("./application.ini")
+	if err != nil {
+		return
+	}
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}(file)
+	var content []byte
+	var tmp = make([]byte, 128)
+	for {
+		read, err := file.Read(tmp)
+		if err == io.EOF {
+			fmt.Println("读完了")
+			break
+		}
+		if err != nil {
+			return
+		}
+		content = append(content, tmp[:read]...)
+	}
+	fmt.Println(string(content))
 }

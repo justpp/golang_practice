@@ -3,7 +3,7 @@ package jd
 import (
 	"errors"
 	"fmt"
-	"giao/util"
+	"giao/practice"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/tidwall/gjson"
 	"io"
@@ -129,7 +129,7 @@ func (j *JD) GetQrCode() error {
 	resp, _ := j.Client.Do(req)
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
-		util.DownLoadImg(resp.Body, "./qr_code.png")
+		practice.DownLoadImg(resp.Body, "./qr_code.png")
 	}
 	j.JdCookie = resp.Cookies()
 	return nil
