@@ -525,3 +525,93 @@ func PracticeFile() {
 	}
 	fmt.Println(string(content))
 }
+
+func Content1() {
+	wg := sync.WaitGroup{}
+	a := 0
+	wg.Add(1)
+	go func() {
+		for {
+			fmt.Println("worker")
+			time.Sleep(time.Second)
+		}
+		wg.Done()
+	}()
+	for {
+		if a > 10 {
+			break
+		}
+		fmt.Println("wait", a)
+		time.Sleep(time.Second)
+		a++
+	}
+	wg.Wait()
+	fmt.Println("over")
+}
+
+func Content2var() {
+	wg := sync.WaitGroup{}
+	exit := false
+	a := 0
+	wg.Add(1)
+	go func() {
+		for {
+			fmt.Println("worker")
+			time.Sleep(time.Second)
+			if exit {
+				break
+			}
+		}
+		wg.Done()
+	}()
+
+	fmt.Println("over")
+	for {
+		if a > 3 {
+			exit = true
+		}
+		if a > 10 {
+			break
+		}
+		fmt.Println("wait", a)
+		time.Sleep(time.Second)
+		a++
+	}
+	wg.Wait()
+}
+
+func Content3chan() {
+	wg := sync.WaitGroup{}
+	a := 0
+	c := make(chan struct{})
+
+	wg.Add(1)
+	go func(c chan struct{}) {
+	LOOP:
+		for {
+			fmt.Println("worker")
+			time.Sleep(time.Second)
+			select {
+			case <-c:
+				break LOOP
+			}
+		}
+		wg.Done()
+		fmt.Println("下班了")
+	}(c)
+
+	for {
+		if a == 3 {
+			c <- struct{}{}
+			close(c)
+		}
+		if a > 10 {
+			break
+		}
+		fmt.Println("wait", a)
+		time.Sleep(time.Second)
+		a++
+	}
+	wg.Wait()
+	fmt.Println("over")
+}

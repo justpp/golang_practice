@@ -1,7 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"giao/practice"
+)
 
 func main() {
-	fmt.Printf("h h h")
+	practice.Content3chan()
 }
