@@ -235,10 +235,10 @@ func (j *JD) GetUserInfo(SaveCookie func(cookies map[int][]*http.Cookie) error) 
 }
 
 func SaveCookie(cookies map[int][]*http.Cookie) error {
-	_, err := os.Stat("./cookies")
+	_, err := os.Stat("./jd/cookies")
 	if err != nil {
 		if os.IsNotExist(err) {
-			err = os.Mkdir("./cookies", os.ModePerm)
+			err = os.Mkdir("./jd/cookies", os.ModePerm)
 			if err != nil {
 				return err
 			}
@@ -246,7 +246,7 @@ func SaveCookie(cookies map[int][]*http.Cookie) error {
 			return err
 		}
 	}
-	cookiesFile := path.Join("./cookies", fmt.Sprintf("%s.json", "cookie"))
+	cookiesFile := path.Join("./jd/cookies", fmt.Sprintf("%s.json", "cookie"))
 	f, err := os.Create(cookiesFile)
 	if err != nil {
 		return err
@@ -265,10 +265,10 @@ func SaveCookie(cookies map[int][]*http.Cookie) error {
 
 func (j *JD) LoadCookie() error {
 	var cookies []*http.Cookie
-	_, err := os.Stat("./cookies")
+	_, err := os.Stat("./jd/cookies")
 	if err != nil {
 		if os.IsNotExist(err) {
-			err = os.Mkdir("./cookies", os.ModePerm)
+			err = os.Mkdir("./jd/cookies", os.ModePerm)
 			if err != nil {
 				return err
 			}
@@ -281,7 +281,7 @@ func (j *JD) LoadCookie() error {
 	if err != nil {
 		return err
 	}
-	cookiesFile := path.Join("./cookies", fmt.Sprintf("%s.json", "cookie"))
+	cookiesFile := path.Join("./jd/cookies", fmt.Sprintf("%s.json", "cookie"))
 	cookiesByte, err := ioutil.ReadFile(cookiesFile)
 	if err != nil {
 		return err

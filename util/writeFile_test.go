@@ -13,8 +13,8 @@ func TestDirExists(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"../cookies",
-			args{"../cookies"},
+			"../jd/cookies",
+			args{"../jd/cookies"},
 			true,
 			false,
 		},

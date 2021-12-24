@@ -39,7 +39,7 @@ func MapDefaultVal(m map[string]string, k, defaultVal string) string {
 }
 
 func CookieStr2Json() error {
-	const str = "./cookies/cookie.txt"
+	const str = "./jd/cookies/cookie.txt"
 	_, err := os.Stat(str)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -49,7 +49,7 @@ func CookieStr2Json() error {
 			return err
 		}
 	}
-	file, err := os.Open("./cookies/cookie.txt")
+	file, err := os.Open("./jd/cookies/cookie.txt")
 	if err != nil {
 		return err
 	}
