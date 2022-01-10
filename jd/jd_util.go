@@ -80,3 +80,21 @@ func CookieStr2Json() error {
 	}
 	return nil
 }
+
+func (j *JD) checkCookieIsLogin() bool {
+	err := j.LoadCookie()
+	if err != nil {
+		fmt.Println("load cookie err", err)
+		return false
+	}
+	isLogin, err := j.validateCookies()
+	if err != nil {
+		fmt.Println("cookie err ", err)
+		return false
+	}
+	if !isLogin {
+		fmt.Println("cookie 失效")
+		return false
+	}
+	return true
+}

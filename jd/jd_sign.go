@@ -42,30 +42,26 @@ type Url struct {
 }
 
 func Login() {
-	j := JdInit()
-
-	err := j.LoadCookie()
-	if err != nil {
-		fmt.Println("load cookie err", err)
-		return
+	j := Init()
+	login := j.checkCookieIsLogin()
+	if !login {
+		// 从cookie.txt中读取cookie处理后存入cookie.json
+		err := CookieStr2Json()
+		if err != nil {
+			fmt.Println("load cookie str err:", err)
+			return
+		}
+		login = j.checkCookieIsLogin()
 	}
-	isLogin, err := j.validateCookies()
-	if err != nil {
-		fmt.Println("err ", err)
-		return
-	}
-	if !isLogin {
-		fmt.Println("cookie 失效")
+	if !login {
+		// 保存的cookie 不行了 走qr
 		j.QrCodeLogin()
 	}
-	err = j.JDBean()
-	if err != nil {
-		return
-	}
+	j.RunAPi()
 	fmt.Println("签到结束")
 }
 
-func JdInit() *JD {
+func Init() *JD {
 	jdUrl := Url{
 		"https://passport.jd.com/new/login.aspx",
 		"https://qr.m.jd.com/show",
@@ -275,11 +271,6 @@ func (j *JD) LoadCookie() error {
 		} else {
 			return err
 		}
-	}
-	// 从cookie.txt中读取cookie处理后存入cookie.json
-	err = CookieStr2Json()
-	if err != nil {
-		return err
 	}
 	cookiesFile := path.Join("./jd/cookies", fmt.Sprintf("%s.json", "cookie"))
 	cookiesByte, err := ioutil.ReadFile(cookiesFile)

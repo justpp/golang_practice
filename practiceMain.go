@@ -1,9 +1,7 @@
 package main
 
-import (
-	"giao/practice"
-)
+import "giao/practice"
 
 func main() {
-	practice.Content3chan()
+	practice.StringPtr()
 }

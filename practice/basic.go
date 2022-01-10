@@ -615,3 +615,60 @@ func Content3chan() {
 	wg.Wait()
 	fmt.Println("over")
 }
+
+func Content4sync() {
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	go func(c context.Context) {
+		go func() {
+		LOOP:
+			for {
+				fmt.Println("worker2")
+				time.Sleep(time.Second)
+				select {
+				case <-c.Done():
+					break LOOP
+				}
+			}
+		}()
+	LOOP:
+		for {
+			fmt.Println("worker1")
+			time.Sleep(time.Second)
+			select {
+			case <-c.Done():
+				break LOOP
+			}
+		}
+		wg.Done()
+	}(ctx)
+	time.Sleep(time.Second * 3)
+	cancelFunc()
+	wg.Wait()
+	fmt.Println("over")
+}
+
+type User struct {
+	Id   int
+	Name *string
+}
+
+// type Stringer interface {
+//    String() string
+//} 在打印结构体内部变量是指针类型时会自动调用结构体的String方法
+//  func (u User) String 可以被打印变量自动调用
+//  func (u *User) String 可以被打印指针变量调用
+func (u *User) String() string {
+	return fmt.Sprintf("ID:%v name:%v\n", u.Id, *u.Name)
+}
+
+func StringPtr() {
+	name := "justpp"
+	user := &User{
+		Id:   2,
+		Name: &name,
+	}
+	fmt.Println(user)
+}
