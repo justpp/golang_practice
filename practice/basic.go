@@ -1,13 +1,15 @@
-package util
+package practice
 
 import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
-	"giao/calc"
+	"giao/util/calc"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"sync"
@@ -423,21 +425,6 @@ func PracticeGo() {
 	fmt.Println(x)
 }
 
-type Singleton struct {
-}
-
-var singleton *Singleton
-var one = new(sync.Once)
-
-// PracticeSyncSingleton 单例
-func PracticeSyncSingleton() *Singleton {
-	one.Do(func() {
-		fmt.Println("Create Obj")
-		singleton = &Singleton{}
-	})
-	return singleton
-}
-
 // PracticeSelect2 示例多路复用
 func PracticeSelect2() {
 	ch := make(chan int, 1)
@@ -469,5 +456,162 @@ func PracticeSlice2() {
 	sliceAdd(s2)
 	fmt.Println(s1)
 	fmt.Println(s2)
+}
 
+func PracticeChan2() {
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	c := make(chan int, 1)
+	go func(a, b int, c chan int) {
+		sum := a + b
+		c <- sum
+		fmt.Println(sum)
+		wg.Done()
+	}(7, 2, c)
+	go func(a, b int, c chan int) {
+		sum := a + b
+		c <- sum
+		fmt.Println(sum)
+		wg.Done()
+	}(-8, 5, c)
+	x, y := <-c, <-c
+	fmt.Println(x + y)
+	wg.Wait()
+}
+
+func PracticeFlag() {
+	var name string
+	flag.StringVar(&name, "name", "张三", "姓名")
+	flag.Parse()
+	fmt.Println(name)
+}
+
+func PracticeLog() {
+	logFile, err := os.OpenFile("./log/test.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		fmt.Println("open log file failed, err:", err)
+		return
+	}
+	log.SetOutput(logFile)
+	log.Println("giaogiao")
+	log.SetFlags(log.Llongfile | log.Lmicroseconds | log.Ldate)
+	log.SetPrefix("[justpp]")
+	log.Println("这是一条很普通的日志。")
+}
+
+func PracticeFile() {
+	file, err := os.Open("./application.ini")
+	if err != nil {
+		return
+	}
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}(file)
+	var content []byte
+	var tmp = make([]byte, 128)
+	for {
+		read, err := file.Read(tmp)
+		if err == io.EOF {
+			fmt.Println("读完了")
+			break
+		}
+		if err != nil {
+			return
+		}
+		content = append(content, tmp[:read]...)
+	}
+	fmt.Println(string(content))
+}
+
+func Content1() {
+	wg := sync.WaitGroup{}
+	a := 0
+	wg.Add(1)
+	go func() {
+		for {
+			fmt.Println("worker")
+			time.Sleep(time.Second)
+		}
+		wg.Done()
+	}()
+	for {
+		if a > 10 {
+			break
+		}
+		fmt.Println("wait", a)
+		time.Sleep(time.Second)
+		a++
+	}
+	wg.Wait()
+	fmt.Println("over")
+}
+
+func Content2var() {
+	wg := sync.WaitGroup{}
+	exit := false
+	a := 0
+	wg.Add(1)
+	go func() {
+		for {
+			fmt.Println("worker")
+			time.Sleep(time.Second)
+			if exit {
+				break
+			}
+		}
+		wg.Done()
+	}()
+
+	fmt.Println("over")
+	for {
+		if a > 3 {
+			exit = true
+		}
+		if a > 10 {
+			break
+		}
+		fmt.Println("wait", a)
+		time.Sleep(time.Second)
+		a++
+	}
+	wg.Wait()
+}
+
+func Content3chan() {
+	wg := sync.WaitGroup{}
+	a := 0
+	c := make(chan struct{})
+
+	wg.Add(1)
+	go func(c chan struct{}) {
+	LOOP:
+		for {
+			fmt.Println("worker")
+			time.Sleep(time.Second)
+			select {
+			case <-c:
+				break LOOP
+			}
+		}
+		wg.Done()
+		fmt.Println("下班了")
+	}(c)
+
+	for {
+		if a == 3 {
+			c <- struct{}{}
+			close(c)
+		}
+		if a > 10 {
+			break
+		}
+		fmt.Println("wait", a)
+		time.Sleep(time.Second)
+		a++
+	}
+	wg.Wait()
+	fmt.Println("over")
 }

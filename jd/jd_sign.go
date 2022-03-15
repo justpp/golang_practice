@@ -3,7 +3,7 @@ package jd
 import (
 	"errors"
 	"fmt"
-	"giao/util"
+	"giao/practice"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/tidwall/gjson"
 	"io"
@@ -44,6 +44,7 @@ type Url struct {
 
 func Login() {
 	j := JdInit()
+
 	err := j.LoadCookie()
 	if err != nil {
 		fmt.Println("load cookie err", err)
@@ -73,6 +74,7 @@ func Login() {
 	if err != nil {
 		return
 	}
+	fmt.Println("签到结束")
 }
 
 func JdInit() *JD {
@@ -139,7 +141,7 @@ func (j *JD) GetQrCode() error {
 	resp, _ := j.Client.Do(req)
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
-		util.DownLoadImg(resp.Body, "./qr_code.png")
+		practice.DownLoadImg(resp.Body, "./qr_code.png")
 	}
 	j.JdCookie = resp.Cookies()
 	return nil
@@ -245,10 +247,10 @@ func (j *JD) GetUserInfo(SaveCookie func(cookies map[int][]*http.Cookie) error) 
 }
 
 func SaveCookie(cookies map[int][]*http.Cookie) error {
-	_, err := os.Stat("./cookies")
+	_, err := os.Stat("./jd/cookies")
 	if err != nil {
 		if os.IsNotExist(err) {
-			err = os.Mkdir("./cookies", os.ModePerm)
+			err = os.Mkdir("./jd/cookies", os.ModePerm)
 			if err != nil {
 				return err
 			}
@@ -256,7 +258,7 @@ func SaveCookie(cookies map[int][]*http.Cookie) error {
 			return err
 		}
 	}
-	cookiesFile := path.Join("./cookies", fmt.Sprintf("%s.json", "cookie"))
+	cookiesFile := path.Join("./jd/cookies", fmt.Sprintf("%s.json", "cookie"))
 	f, err := os.Create(cookiesFile)
 	if err != nil {
 		return err
@@ -275,10 +277,10 @@ func SaveCookie(cookies map[int][]*http.Cookie) error {
 
 func (j *JD) LoadCookie() error {
 	var cookies map[int][]*http.Cookie
-	_, err := os.Stat("./cookies")
+	_, err := os.Stat("./jd/cookies")
 	if err != nil {
 		if os.IsNotExist(err) {
-			err = os.Mkdir("./cookies", os.ModePerm)
+			err = os.Mkdir("./jd/cookies", os.ModePerm)
 			if err != nil {
 				return err
 			}
@@ -291,7 +293,7 @@ func (j *JD) LoadCookie() error {
 	if err != nil {
 		return err
 	}
-	cookiesFile := path.Join("./cookies", fmt.Sprintf("%s.json", "cookie"))
+	cookiesFile := path.Join("./jd/cookies", fmt.Sprintf("%s.json", "cookie"))
 	cookiesByte, err := ioutil.ReadFile(cookiesFile)
 	if err != nil {
 		return err
@@ -301,8 +303,6 @@ func (j *JD) LoadCookie() error {
 		return err
 	}
 	j.JdCookieMap = cookies
-	//u, _ := url.Parse(j.Url.Jd)
-	//j.Client.Jar.SetCookies(u, cookies)
 	return nil
 }
 

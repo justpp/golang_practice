@@ -3,5 +3,6 @@
 /log/
 go.sum
 /qr_code.png
-/cookies/cookie.json
-/cookies/cookie.txt
+/jd/cookies/cookie.json
+/jd/cookies/cookie.txt
+/*.apk
