@@ -44,7 +44,6 @@ type Url struct {
 
 func Login() {
 	j := JdInit()
-
 	err := j.LoadCookie()
 	if err != nil {
 		fmt.Println("load cookie err", err)
@@ -67,9 +66,13 @@ func Login() {
 		if err != nil {
 			return
 		}
-		fmt.Println("签到结束")
 	}
-
+	fmt.Println("签到结束 按回车键退出")
+	b := make([]byte, 1)
+	_, err = os.Stdin.Read(b)
+	if err != nil {
+		return
+	}
 }
 
 func JdInit() *JD {
