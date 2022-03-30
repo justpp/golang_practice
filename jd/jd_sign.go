@@ -68,12 +68,12 @@ func Login() {
 			return
 		}
 	}
-	fmt.Println("签到结束 按回车键退出")
-	b := make([]byte, 1)
-	_, err = os.Stdin.Read(b)
-	if err != nil {
-		return
-	}
+	//fmt.Println("签到结束 按回车键退出")
+	//b := make([]byte, 1)
+	//_, err = os.Stdin.Read(b)
+	//if err != nil {
+	//	return
+	//}
 	fmt.Println("签到结束")
 }
 
@@ -277,10 +277,12 @@ func SaveCookie(cookies map[int][]*http.Cookie) error {
 
 func (j *JD) LoadCookie() error {
 	var cookies map[int][]*http.Cookie
-	_, err := os.Stat("./jd/cookies")
+	wd, _ := os.Getwd()
+	cookieDir := fmt.Sprintf("%v/jd/cookies", wd)
+	_, err := os.Stat(cookieDir)
 	if err != nil {
 		if os.IsNotExist(err) {
-			err = os.Mkdir("./jd/cookies", os.ModePerm)
+			err = os.Mkdir(cookieDir, os.ModePerm)
 			if err != nil {
 				return err
 			}
@@ -293,7 +295,7 @@ func (j *JD) LoadCookie() error {
 	if err != nil {
 		return err
 	}
-	cookiesFile := path.Join("./jd/cookies", fmt.Sprintf("%s.json", "cookie"))
+	cookiesFile := path.Join(cookieDir, fmt.Sprintf("%s.json", "cookie"))
 	cookiesByte, err := ioutil.ReadFile(cookiesFile)
 	if err != nil {
 		return err
