@@ -58,6 +58,8 @@ func CookieStr2Json() error {
 	var count int
 	for {
 		lineStr, err := reader.ReadString('\n')
+		// net/http cookie验证不能有双引号
+		lineStr = strings.Replace(lineStr, "\"", "", -1)
 		if err != nil {
 			break
 		}
