@@ -16,9 +16,12 @@ func (j *JD) NewRequestWithHead(Method, URL string, HeaderMap map[string]string,
 		return nil, err
 	}
 	req.Header.Set("User-Agent", MapDefaultVal(HeaderMap, "User-Agent", j.UserAgent))
-	req.Header.Set("Connection", MapDefaultVal(HeaderMap, "User-Agent", j.Connection))
-	req.Header.Set("Referer", MapDefaultVal(HeaderMap, "User-Agent", j.Url.Login))
-	req.Header.Set("Accept", MapDefaultVal(HeaderMap, "User-Agent", j.Accept))
+	req.Header.Set("Connection", MapDefaultVal(HeaderMap, "Connection", j.Connection))
+	req.Header.Set("Referer", MapDefaultVal(HeaderMap, "Referer", j.Url.Login))
+	req.Header.Set("Accept", MapDefaultVal(HeaderMap, "Accept", j.Accept))
+	for k, v := range HeaderMap {
+		req.Header.Set(k, v)
+	}
 	return req, nil
 }
 

@@ -63,10 +63,7 @@ func Login() {
 			fmt.Println("cookie 失效")
 			j.QrCodeLogin()
 		}
-		err = j.JDBean()
-		if err != nil {
-			return
-		}
+		j.RunAPi()
 	}
 	//fmt.Println("签到结束 按回车键退出")
 	//b := make([]byte, 1)

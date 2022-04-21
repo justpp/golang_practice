@@ -7,17 +7,20 @@ import (
 	"net/http"
 )
 
-func (j *JD) JDBean() error {
+func (j *JD) RunAPi() {
+	j.JDBean()
+}
+
+func (j *JD) JDBean() {
 	u := j.createUrlWithArgs("https://api.m.jd.com/client.action?functionId=signBeanIndex&appid=ld", map[string]string{})
 	req, err := j.NewRequestWithHead(http.MethodGet, u, nil, nil)
 	if err != nil {
-		return err
+		fmt.Println("JDBean error", err)
 	}
 
 	resp, err := j.Client.Do(req)
 	if err != nil {
 		fmt.Println("err", err)
-		return err
 	}
 	defer resp.Body.Close()
 	all, _ := ioutil.ReadAll(resp.Body)
@@ -27,5 +30,4 @@ func (j *JD) JDBean() error {
 		daily = json.Get("data.continuityAward")
 	}
 	fmt.Println("签到领京豆", daily.Get("title").Str, "获得", daily.Get("beanAward.beanCount"), "个京豆")
-	return nil
 }
