@@ -672,3 +672,28 @@ func StringPtr() {
 	}
 	fmt.Println(user)
 }
+
+// SelectPractice select 练习
+func SelectPractice() {
+	// 创建管道
+	output := make(chan string, 10)
+	// 子协程写数据
+	go func(ch chan string) {
+		count := 0
+		for {
+			select {
+			case ch <- "hello":
+				fmt.Println("write hello", count)
+			default:
+				fmt.Println("channel full")
+			}
+			time.Sleep(time.Millisecond * 500)
+			count++
+		}
+	}(output)
+	// 取数据
+	for s := range output {
+		fmt.Println("res:", s)
+		time.Sleep(time.Second)
+	}
+}
