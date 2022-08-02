@@ -16,9 +16,12 @@ func (j *JD) NewRequestWithHead(Method, URL string, HeaderMap map[string]string,
 		return nil, err
 	}
 	req.Header.Set("User-Agent", MapDefaultVal(HeaderMap, "User-Agent", j.UserAgent))
-	req.Header.Set("Connection", MapDefaultVal(HeaderMap, "User-Agent", j.Connection))
-	req.Header.Set("Referer", MapDefaultVal(HeaderMap, "User-Agent", j.Url.Login))
-	req.Header.Set("Accept", MapDefaultVal(HeaderMap, "User-Agent", j.Accept))
+	req.Header.Set("Connection", MapDefaultVal(HeaderMap, "Connection", j.Connection))
+	req.Header.Set("Referer", MapDefaultVal(HeaderMap, "Referer", j.Url.Login))
+	req.Header.Set("Accept", MapDefaultVal(HeaderMap, "Accept", j.Accept))
+	for k, v := range HeaderMap {
+		req.Header.Set(k, v)
+	}
 	return req, nil
 }
 
@@ -58,20 +61,25 @@ func CookieStr2Json() error {
 	var count int
 	for {
 		lineStr, err := reader.ReadString('\n')
+		// net/http cookie验证不能有双引号
+		lineStr = strings.Replace(lineStr, "\"", "", -1)
 		if err != nil {
 			break
 		}
-		for _, i := range strings.Split(lineStr, ";") {
+		var cookies []*http.Cookie
+		for _, i := range strings.Split(strings.TrimSpace(lineStr), ";") {
 			s := strings.Split(i, "=")
 			name := s[0]
 			val := s[1]
-			cookiesArr[count] = append(cookiesArr[count], &http.Cookie{
+
+			cookies = append(cookies, &http.Cookie{
 				Name:   name,
 				Value:  val,
 				Domain: ".jd.com",
 				Path:   "/",
 			})
 		}
+		cookiesArr[count] = cookies
 		count++
 	}
 	err = SaveCookie(cookiesArr)

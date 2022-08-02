@@ -20,14 +20,15 @@ import (
 )
 
 type JD struct {
-	Url        Url
-	UserAgent  string // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36"
-	Connection string // "keep-alive"
-	Accept     string // "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3"
-	JdCookie   []*http.Cookie
-	Client     *http.Client
-	Ticket     string
-	IsLogin    bool
+	Url         Url
+	UserAgent   string // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36"
+	Connection  string // "keep-alive"
+	Accept      string // "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3"
+	JdCookie    []*http.Cookie
+	JdCookieMap map[int][]*http.Cookie
+	Client      *http.Client
+	Ticket      string
+	IsLogin     bool
 }
 
 type Url struct {
@@ -42,26 +43,38 @@ type Url struct {
 }
 
 func Login() {
-	j := Init()
-	login := j.checkCookieIsLogin()
-	if !login {
-		// 从cookie.txt中读取cookie处理后存入cookie.json
-		err := CookieStr2Json()
+	j := JdInit()
+
+	err := j.LoadCookie()
+	if err != nil {
+		fmt.Println("load cookie err", err)
+		return
+	}
+	for _, cookies := range j.JdCookieMap {
+		j.JdCookie = cookies
+		u, _ := url.Parse(j.Url.Jd)
+		j.Client.Jar.SetCookies(u, cookies)
+		isLogin, err := j.validateCookies()
 		if err != nil {
-			fmt.Println("load cookie str err:", err)
+			fmt.Println("err ", err)
 			return
 		}
-		login = j.checkCookieIsLogin()
+		if !isLogin {
+			fmt.Println("cookie 失效")
+			j.QrCodeLogin()
+		}
+		j.RunAPi()
 	}
-	if !login {
-		// 保存的cookie 不行了 走qr
-		j.QrCodeLogin()
-	}
-	j.RunAPi()
+	//fmt.Println("签到结束 按回车键退出")
+	//b := make([]byte, 1)
+	//_, err = os.Stdin.Read(b)
+	//if err != nil {
+	//	return
+	//}
 	fmt.Println("签到结束")
 }
 
-func Init() *JD {
+func JdInit() *JD {
 	jdUrl := Url{
 		"https://passport.jd.com/new/login.aspx",
 		"https://qr.m.jd.com/show",
@@ -260,11 +273,13 @@ func SaveCookie(cookies map[int][]*http.Cookie) error {
 }
 
 func (j *JD) LoadCookie() error {
-	var cookies []*http.Cookie
-	_, err := os.Stat("./jd/cookies")
+	var cookies map[int][]*http.Cookie
+	wd, _ := os.Getwd()
+	cookieDir := fmt.Sprintf("%v/jd/cookies", wd)
+	_, err := os.Stat(cookieDir)
 	if err != nil {
 		if os.IsNotExist(err) {
-			err = os.Mkdir("./jd/cookies", os.ModePerm)
+			err = os.Mkdir(cookieDir, os.ModePerm)
 			if err != nil {
 				return err
 			}
@@ -272,7 +287,12 @@ func (j *JD) LoadCookie() error {
 			return err
 		}
 	}
-	cookiesFile := path.Join("./jd/cookies", fmt.Sprintf("%s.json", "cookie"))
+	// 从cookie.txt中读取cookie处理后存入cookie.json
+	err = CookieStr2Json()
+	if err != nil {
+		return err
+	}
+	cookiesFile := path.Join(cookieDir, fmt.Sprintf("%s.json", "cookie"))
 	cookiesByte, err := ioutil.ReadFile(cookiesFile)
 	if err != nil {
 		return err
@@ -281,9 +301,7 @@ func (j *JD) LoadCookie() error {
 	if err != nil {
 		return err
 	}
-	j.JdCookie = cookies
-	u, _ := url.Parse(j.Url.Jd)
-	j.Client.Jar.SetCookies(u, cookies)
+	j.JdCookieMap = cookies
 	return nil
 }
 

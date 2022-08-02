@@ -8,24 +8,19 @@ import (
 )
 
 func (j *JD) RunAPi() {
-	err := j.JDBean()
-	if err != nil {
-		return
-	}
-	j.JDStore()
+	j.JDBean()
 }
 
-func (j *JD) JDBean() error {
+func (j *JD) JDBean() {
 	u := j.createUrlWithArgs("https://api.m.jd.com/client.action?functionId=signBeanIndex&appid=ld", map[string]string{})
 	req, err := j.NewRequestWithHead(http.MethodGet, u, nil, nil)
 	if err != nil {
-		return err
+		fmt.Println("JDBean error", err)
 	}
 
 	resp, err := j.Client.Do(req)
 	if err != nil {
 		fmt.Println("err", err)
-		return err
 	}
 	defer resp.Body.Close()
 	all, _ := ioutil.ReadAll(resp.Body)
@@ -35,29 +30,4 @@ func (j *JD) JDBean() error {
 		daily = json.Get("data.continuityAward")
 	}
 	fmt.Println("签到领京豆", daily.Get("title").Str, "获得", daily.Get("beanAward.beanCount"), "个京豆")
-	return nil
-}
-
-func (j *JD) JDStore() error {
-	u := j.createUrlWithArgs("https://api.m.jd.com/api?appid=jdsupermarket&functionId=smtg_sign&clientVersion=8.0.0&client=m&body=%7B%7D", map[string]string{})
-	req, err := j.NewRequestWithHead(http.MethodGet, u, nil, nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := j.Client.Do(req)
-	if err != nil {
-		fmt.Println("err", err)
-		return err
-	}
-	defer resp.Body.Close()
-	all, _ := ioutil.ReadAll(resp.Body)
-	json := gjson.Parse(string(all))
-	fmt.Println("json", json)
-	daily := json.Get("data.dailyAward")
-	if !daily.Exists() {
-		daily = json.Get("data.continuityAward")
-	}
-	fmt.Println("签到领京豆", daily.Get("title").Str, "获得", daily.Get("beanAward.beanCount"), "个京豆")
-	return nil
 }
