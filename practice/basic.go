@@ -697,3 +697,22 @@ func SelectPractice() {
 		time.Sleep(time.Second)
 	}
 }
+
+func ForPractice() {
+	var urls = []string{
+		"http://pkg.go.dev",
+		"http://www.liwenzhou.com",
+		"http://www.yixieqitawangzhi.com",
+	}
+	w := sync.WaitGroup{}
+	for _, url := range urls {
+		// 在for内开启协程，协程内使的外部变量：重新赋值或直接传入 不然会导致变量是同一个值
+		url := url
+		w.Add(1)
+		go func() {
+			println("url", url)
+			w.Done()
+		}()
+	}
+	w.Wait()
+}
