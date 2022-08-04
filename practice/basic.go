@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 	"sync"
 	"time"
 )
@@ -715,4 +716,35 @@ func ForPractice() {
 		}()
 	}
 	w.Wait()
+}
+
+func fmtReflectType(i interface{}) {
+	r := reflect.TypeOf(i)
+	fmt.Printf("name: %v kind: %v\n", r.Name(), r.Kind())
+}
+
+type myType int64
+
+func ReflectPractice() {
+	var a *float32
+	var b myType
+	var c rune
+	type student struct {
+		Name string
+		Age  int8 `json:"age"`
+	}
+	stu := student{"justpp", 2}
+	fmtReflectType(a)
+	fmtReflectType(b)
+	fmtReflectType(c)
+	b = 2
+	bT := reflect.ValueOf(&b)
+	bT.Elem().SetInt(9)
+	fmt.Println("b", b)
+	fmtReflectType(stu)
+
+	stdRef := reflect.TypeOf(stu)
+	age := stdRef.Field(1)
+	ageVal := reflect.ValueOf(age)
+	fmt.Printf("name: %v index: %v json tag:%v val: %v", age.Name, age.Index, age.Tag.Get("json"), ageVal)
 }
