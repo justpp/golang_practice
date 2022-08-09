@@ -748,3 +748,27 @@ func ReflectPractice() {
 	ageVal := reflect.ValueOf(age)
 	fmt.Printf("name: %v index: %v json tag:%v val: %v", age.Name, age.Index, age.Tag.Get("json"), ageVal)
 }
+
+func FlagPractice() {
+	var name string
+	flag.Parse()
+	args := flag.Args()
+	if len(args) <= 0 {
+		return
+	}
+	fmt.Printf("args: %v \n", args)
+	switch args[0] {
+	case "go":
+		goCmd := flag.NewFlagSet("go", flag.ExitOnError)
+		goCmd.StringVar(&name, "name", "golang", "帮助信息 --go")
+		_ = goCmd.Parse(args[1:])
+	case "php":
+		var a string
+		phpCmd := flag.NewFlagSet("php", flag.ExitOnError)
+		phpCmd.StringVar(&name, "name", "php", "帮助信息 --php")
+		phpCmd.StringVar(&a, "a", "a", "帮助信息 --php a")
+		_ = phpCmd.Parse(args[1:])
+		_ = phpCmd.Parse(args[1:])
+	}
+	log.Printf("name %v", name)
+}

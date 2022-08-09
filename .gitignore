@@ -7,3 +7,4 @@ go.sum
 /jd/cookies/cookie.txt
 /*.apk
 /main
+/.vscode/launch.json
