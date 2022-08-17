@@ -13,7 +13,7 @@ func NewRouter() *gin.Engine {
 	tag := v1.NewTag()
 	article := v1.NewArticle()
 
-	apiV1 := r.Group("/api/vi")
+	apiV1 := r.Group("/api/v1")
 	{
 		apiV1.POST("/tags", tag.Create)
 		apiV1.DELETE("/tags/:id", tag.Delete)

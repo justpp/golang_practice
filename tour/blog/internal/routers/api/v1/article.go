@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"giao/tour/blog/global"
 	"giao/tour/blog/pkg/app"
 	"giao/tour/blog/pkg/errorcode"
 	"github.com/gin-gonic/gin"
@@ -13,9 +14,14 @@ func NewArticle() Article {
 	return Article{}
 }
 
-func (a Article) List(*gin.Context) {}
-func (a Article) Get(c *gin.Context) {
+func (a Article) List(c *gin.Context) {
 	app.NewResponse(c).ToErrorResponse(errorcode.ServerError)
+	return
+}
+func (a Article) Get(c *gin.Context) {
+	global.Logger.WithContext(c).Info("嘿嘿")
+	global.Logger.Info("hihi")
+	app.NewResponse(c).ToResponse("234234")
 	return
 }
 func (a Article) Create(*gin.Context) {}

@@ -6,6 +6,7 @@ import (
 	"giao/tour/blog/internal/routers"
 	"giao/tour/blog/pkg/logger"
 	"giao/tour/blog/pkg/setting"
+	"giao/util"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"log"
@@ -21,7 +22,7 @@ func init() {
 
 	err = setupDBEngine()
 	if err != nil {
-		return
+		log.Printf("init.setupDBEngine err:%v", err)
 	}
 	setupLogger()
 }
@@ -77,9 +78,10 @@ func setupDBEngine() error {
 }
 
 func setupLogger() {
+	fileName := util.GetCurrentAbPath() + global.AppSetting.LogSavePath + "/" + global.AppSetting.LogFileName + global.AppSetting.LogFileExt
 	global.Logger = logger.NewLogger(&lumberjack.Logger{
-		Filename:  global.AppSetting.LogSavePath + "/" + global.AppSetting.LogFileName + global.AppSetting.LogFileExt,
-		MaxSize:   600,
+		Filename:  fileName,
+		MaxSize:   500,
 		MaxAge:    10,
 		LocalTime: true,
 	}, "", log.LstdFlags).WithCaller(2)

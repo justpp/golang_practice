@@ -10,3 +10,4 @@ go.sum
 /.vscode/launch.json
 
 
+/tour/blog/storage/logs/app.log
