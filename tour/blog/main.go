@@ -4,8 +4,10 @@ import (
 	"giao/tour/blog/global"
 	"giao/tour/blog/internal/model"
 	"giao/tour/blog/internal/routers"
+	"giao/tour/blog/pkg/logger"
 	"giao/tour/blog/pkg/setting"
 	"github.com/gin-gonic/gin"
+	"gopkg.in/natefinch/lumberjack.v2"
 	"log"
 	"net/http"
 	"time"
@@ -21,10 +23,10 @@ func init() {
 	if err != nil {
 		return
 	}
+	setupLogger()
 }
 
 func main() {
-	log.Printf("database %v", global.DatabaseSetting)
 	gin.SetMode(global.ServerSetting.RunMode)
 	router := routers.NewRouter()
 	r := &http.Server{
@@ -72,4 +74,13 @@ func setupDBEngine() error {
 		return err
 	}
 	return err
+}
+
+func setupLogger() {
+	global.Logger = logger.NewLogger(&lumberjack.Logger{
+		Filename:  global.AppSetting.LogSavePath + "/" + global.AppSetting.LogFileName + global.AppSetting.LogFileExt,
+		MaxSize:   600,
+		MaxAge:    10,
+		LocalTime: true,
+	}, "", log.LstdFlags).WithCaller(2)
 }
