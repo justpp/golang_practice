@@ -14,6 +14,7 @@ import (
 	"os"
 	"reflect"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -771,4 +772,60 @@ func FlagPractice() {
 		_ = phpCmd.Parse(args[1:])
 	}
 	log.Printf("name %v", name)
+}
+
+func GoAddPractice() {
+	var a int32
+	var wg sync.WaitGroup
+	start := time.Now()
+
+	for i := 0; i < 1000000; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			a++
+		}()
+	}
+	wg.Wait()
+	spendTime := time.Now().Sub(start).Nanoseconds()
+
+	fmt.Printf("use nothing add result:%d, spend:%v\n", a, spendTime)
+}
+
+func MutexAddPractice() {
+	var a int32
+	var wg sync.WaitGroup
+	var u sync.Mutex
+	start := time.Now()
+
+	for i := 0; i < 1000000; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			u.Lock()
+			a += 1
+			u.Unlock()
+		}()
+	}
+	wg.Wait()
+	spendTime := time.Now().Sub(start).Nanoseconds()
+
+	fmt.Printf("use mutex add result:%d, spend:%v\n", a, spendTime)
+}
+
+func AtomicAddPractice() {
+	var a int32
+	var wg sync.WaitGroup
+	start := time.Now()
+
+	for i := 0; i < 1000000; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			atomic.AddInt32(&a, 1)
+		}()
+	}
+	wg.Wait()
+	spendTime := time.Now().Sub(start).Nanoseconds()
+	fmt.Printf("use atomic add result:%d, spend:%v\n", a, spendTime)
 }

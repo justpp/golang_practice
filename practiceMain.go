@@ -1,7 +1,15 @@
 package main
 
-import "giao/practice"
+import (
+	"fmt"
+	"giao/util"
+)
 
 func main() {
-	practice.FlagPractice()
+	uuid := util.NewUuidGenerator("gg")
+
+	fmt.Println(uuid.Get())
+	for i := 0; i < 50; i++ {
+		fmt.Println(uuid.GetUint32())
+	}
 }
