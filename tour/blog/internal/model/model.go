@@ -36,11 +36,14 @@ func NewDBEngine(settings *setting.DatabaseSettings) (*gorm.DB, error) {
 		db.LogMode(true)
 	}
 	db.SingularTable(true)
+	db.Callback().Create().Replace("gorm:update_time_stamp", updateTimestampForCreateCallback)
+	db.Callback().Update().Replace("gorm:update_time_stamp", updateTimestampForUpdateCallback)
+	db.Callback().Delete().Replace("gorm:delete", deleteCallback)
 	db.DB().SetMaxIdleConns(global.DatabaseSetting.MaxIdleConnects)
 	db.DB().SetMaxOpenConns(global.DatabaseSetting.MaxOpenConnects)
 	return db, nil
 }
-func updateTimestampForCreateCallback(scope gorm.Scope) {
+func updateTimestampForCreateCallback(scope *gorm.Scope) {
 	if !scope.HasError() {
 		nowTime := time.Now().Unix()
 		if createTimeField, ok := scope.FieldByName("CreateOn"); ok {
@@ -57,10 +60,47 @@ func updateTimestampForCreateCallback(scope gorm.Scope) {
 	}
 }
 
-func updateTimestampForUpdateCallback(scope gorm.Scope) {
+func updateTimestampForUpdateCallback(scope *gorm.Scope) {
 	if !scope.HasError() {
 		if updateField, ok := scope.FieldByName("ModifiedOn"); ok {
 			_ = updateField.Set(time.Now().Unix())
 		}
 	}
+}
+
+func deleteCallback(scope *gorm.Scope) {
+	if !scope.HasError() {
+		var extraOption string
+		if str, ok := scope.Get("gorm:delete_option"); ok {
+			extraOption = fmt.Sprint(str)
+		}
+		deleteField, hasDeletedField := scope.Get("DeletedOn")
+		isDelField, hasIsDel := scope.Get("IsDel")
+		if !scope.Search.Unscoped && hasDeletedField && hasIsDel {
+			now := time.Now().Unix()
+			scope.Raw(fmt.Sprintf(
+				"UPDATE %v SET %v=%v,%v=%v%v%v",
+				scope.QuotedTableName(),
+				scope.Quote(deleteField.DBName),
+				scope.AddToVars(now),
+				scope.Quote(isDelField.DBName),
+				scope.AddToVars(1),
+				addExtraSpaceIfExist(scope.CombinedConditionSql()),
+				addExtraSpaceIfExist(extraOption),
+			)).Exec()
+		} else {
+			scope.Raw(fmt.Sprintf(
+				"DELETE FROM %v%v%v",
+				scope.QuotedTableName(),
+				addExtraSpaceIfExist(scope.CombinedConditionSql()),
+				addExtraSpaceIfExist(extraOption),
+			)).Exec()
+		}
+	}
+}
+func addExtraSpaceIfExist(str string) string {
+	if str != "" {
+		return " " + str
+	}
+	return ""
 }
