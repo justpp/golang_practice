@@ -1,15 +1,7 @@
 package main
 
-import (
-	"fmt"
-	"giao/util"
-)
+import "giao/practice"
 
 func main() {
-	uuid := util.NewUuidGenerator("gg")
-
-	fmt.Println(uuid.Get())
-	for i := 0; i < 50; i++ {
-		fmt.Println(uuid.GetUint32())
-	}
+	practice.TestFactoryFunc()
 }
