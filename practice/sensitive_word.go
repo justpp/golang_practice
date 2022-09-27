@@ -1,6 +1,9 @@
 package practice
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 func SensitiveWReplace() {
 	sensitiveWords := []string{
@@ -44,4 +47,13 @@ func SensitiveRuneReplace() {
 	}
 
 	println("text -> ", text)
+}
+
+func SlicePractice() {
+	a := make([]int, 0, 5)
+	a = append(a, 1)
+	fmt.Println(cap(a), len(a))
+	b := append(a, 2)
+	c := append(a, 3)
+	fmt.Println(a, b, c)
 }

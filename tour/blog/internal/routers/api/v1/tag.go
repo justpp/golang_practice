@@ -1,10 +1,11 @@
 package v1
 
 import (
-	"fmt"
 	"giao/tour/blog/global"
+	"giao/tour/blog/internal/services"
+	"giao/tour/blog/pkg/app"
+	"giao/tour/blog/pkg/errorcode"
 	"github.com/gin-gonic/gin"
-	"log"
 )
 
 type Tag struct {
@@ -14,10 +15,34 @@ func NewTag() Tag {
 	return Tag{}
 }
 
-func (t Tag) List(*gin.Context) {
-	log.Printf("9999999999999%s", "2344444444444444444")
-	fmt.Println("99999999999999999")
-	global.Logger.WithCallersFrames().Info("234234")
+func (t Tag) List(c *gin.Context) {
+	param := services.ListTagRequest{}
+	response := app.NewResponse(c)
+	valid, errs := app.BindAndValid(c, &param)
+	if !valid {
+		global.Logger.Errorf("app.BindAndValid errs: %v", errs)
+		response.ToErrorResponse(errorcode.InvalidParams.WithDetails(errs.Errors()...))
+		return
+	}
+
+	svc := services.New(c.Request.Context())
+	pager := app.Pager{Page: app.GetPage(c), PageSize: app.GetPageSize(c)}
+	totalRows, err := svc.CountTag(&services.CountTagRequest{Name: param.Name, State: param.State})
+	if err != nil {
+		global.Logger.Errorf("svc.CountTag err: %v", err)
+		response.ToErrorResponse(errorcode.ErrorCountTagFail)
+		return
+	}
+
+	tags, err := svc.ListTag(&param, &pager)
+	if err != nil {
+		global.Logger.Errorf("svc.GetTagList err: %v", err)
+		response.ToErrorResponse(errorcode.ErrorGetTagListFail)
+		return
+	}
+
+	response.ToResponseList(tags, totalRows)
+	return
 }
 func (t Tag) Get(*gin.Context)    {}
 func (t Tag) Create(*gin.Context) {}
