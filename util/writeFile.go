@@ -12,8 +12,8 @@ const dirName = "./log"
 
 func init() {
 	// 判断文件夹是否存在
-	dirExists, _ := DirExists(dirName)
-	if !dirExists {
+	IsExists, _ := IsExists(dirName)
+	if !IsExists {
 		_ = os.Mkdir(dirName, 0644)
 	}
 }
@@ -56,7 +56,7 @@ func WriteIoUtil(s string) {
 	}
 }
 
-func DirExists(dirName string) (bool, error) {
+func IsExists(dirName string) (bool, error) {
 	_, err := os.Stat(dirName)
 	if err == nil {
 		return true, nil

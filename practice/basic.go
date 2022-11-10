@@ -2,17 +2,23 @@ package practice
 
 import (
 	"bufio"
+	"container/list"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"giao/util/calc"
+	_ "github.com/go-sql-driver/mysql"
+	errors "github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"reflect"
+	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -161,7 +167,7 @@ type class struct {
 	Student []*Stud
 }
 
-//Stud 学生
+// Stud 学生
 type Stud struct {
 	ID     int `json:"id"`
 	Gender string
@@ -657,11 +663,12 @@ type User struct {
 	Name *string
 }
 
-// type Stringer interface {
-//    String() string
-//} 在打印结构体内部变量是指针类型时会自动调用结构体的String方法
-//  func (u User) String 可以被打印变量自动调用
-//  func (u *User) String 可以被打印指针变量调用
+//	type Stringer interface {
+//	   String() string
+//	} 在打印结构体内部变量是指针类型时会自动调用结构体的String方法
+//
+//	func (u User) String 可以被打印变量自动调用
+//	func (u *User) String 可以被打印指针变量调用
 func (u *User) String() string {
 	return fmt.Sprintf("ID:%v name:%v\n", u.Id, *u.Name)
 }
@@ -828,4 +835,351 @@ func AtomicAddPractice() {
 	wg.Wait()
 	spendTime := time.Now().Sub(start).Nanoseconds()
 	fmt.Printf("use atomic add result:%d, spend:%v\n", a, spendTime)
+}
+
+type Menu struct {
+	Id   int    `json:"id"`
+	Pid  int    `json:"pid"`
+	Name string `json:"name"`
+}
+
+type ResponseMenu struct {
+	Name     string         `json:"name"`
+	Children []ResponseMenu `json:"children"`
+}
+
+func GetDepartmentData() []*Menu {
+	db, err := sql.Open("mysql", "root:123456@tcp(localhost:3308)/vpea_erp_local")
+	if err != nil {
+		fmt.Println("err open:", err)
+		return nil
+	}
+	query, err := db.Query("select * from departments")
+	if err != nil {
+		fmt.Println("err query:", err)
+		return nil
+	}
+	var menus []*Menu
+	columns, _ := query.Columns()
+	// 每个列的值,将值获取到[]byte中
+	vals := make([][]byte, len(columns))
+	// query.Scan的参数,
+	scans := make([]interface{}, len(columns))
+	// 让每一行的数据都填充到[][]byte
+	for k := range columns {
+		scans[k] = &vals[k]
+	}
+	for query.Next() {
+		query.Scan(scans...)
+		row := make(map[string]string)
+		for k, v := range vals {
+			key := columns[k]
+			row[key] = string(v)
+		}
+		menu := &Menu{}
+		if err != nil {
+			return nil
+		}
+		// 通过反射向结构体赋值
+		menuRefT := reflect.TypeOf(menu).Elem()
+		menuRefV := reflect.ValueOf(menu).Elem()
+		for i := 0; i < menuRefV.NumField(); i++ {
+			// 根据结构体tag找到对应字段的值
+			rowVal := row[menuRefT.Field(i).Tag.Get("json")]
+			vType := menuRefV.Field(i).Kind()
+			switch vType {
+			case reflect.Int:
+				intVal, _ := strconv.Atoi(rowVal)
+				menuRefV.Field(i).Set(reflect.ValueOf(intVal))
+				break
+			case reflect.String:
+				menuRefV.Field(i).Set(reflect.ValueOf(rowVal))
+			default:
+				fmt.Printf("暂不支持类型:%s\n", vType.String())
+			}
+		}
+		menus = append(menus, menu)
+		if err != nil {
+			fmt.Println("err scan:", err)
+			return nil
+		}
+	}
+	return menus
+}
+
+func CreateLoop(menus []*Menu, pid int) []ResponseMenu {
+	tree := make([]ResponseMenu, 0)
+	for _, menu := range menus {
+		if menu.Pid == pid {
+			tree = append(tree, ResponseMenu{
+				Name:     menu.Name,
+				Children: CreateLoop(menus, menu.Id),
+			})
+		}
+	}
+	return tree
+}
+
+// HeapSortMax arr := []int{1, 9, 10, 30, 2, 5, 45, 8, 63, 234, 12}
+func HeapSortMax(arr []int, length int) []int {
+	if length <= 1 {
+		return arr
+	}
+	depth := length/2 - 1 // 二叉深度
+	for i := depth; i >= 0; i-- {
+		topMax := i
+		leftChild := i*2 + 1
+		rightChild := i*2 + 2
+		if leftChild <= length-1 && arr[leftChild] > arr[topMax] { // 防止越过界
+			topMax = leftChild
+		}
+		if rightChild <= length-1 && arr[rightChild] > arr[topMax] { // 防止越界
+			topMax = rightChild
+		}
+		if topMax != i {
+			arr[i], arr[topMax] = arr[topMax], arr[i]
+		}
+	}
+	return arr
+}
+
+// HeapSort 堆排序 最大堆 升序
+func HeapSort(arr []int) []int {
+	length := len(arr)
+	for i := 0; i < length; i++ {
+		lastIn := length - i
+		HeapSortMax(arr, lastIn)
+		if i < length {
+			arr[0], arr[lastIn-1] = arr[lastIn-1], arr[0]
+		}
+	}
+	return arr
+}
+
+func Unmarshal(data []byte, v interface{}) error {
+	s := string(data)
+	//去除前后的连续空格
+	s = strings.TrimLeft(s, " ")
+	s = strings.TrimRight(s, " ")
+	if len(s) == 0 {
+		return nil
+	}
+	typ := reflect.TypeOf(v)
+	value := reflect.ValueOf(v)
+	if typ.Kind() != reflect.Ptr { //因为要修改v，必须传指针
+		return errors.New("must pass pointer parameter")
+	}
+
+	typ = typ.Elem() //解析指针
+	value = value.Elem()
+
+	switch typ.Kind() {
+	case reflect.String:
+		if s[0] == '"' && s[len(s)-1] == '"' {
+			value.SetString(s[1 : len(s)-1]) //去除前后的""
+		} else {
+			return fmt.Errorf("invalid json part: %s", s)
+		}
+	case reflect.Bool:
+		if b, err := strconv.ParseBool(s); err == nil {
+			value.SetBool(b)
+		} else {
+			return err
+		}
+	case reflect.Float32,
+		reflect.Float64:
+		if f, err := strconv.ParseFloat(s, 64); err != nil {
+			return err
+		} else {
+			value.SetFloat(f) //通过reflect.Value修改原始数据的值
+		}
+	case reflect.Int,
+		reflect.Int8,
+		reflect.Int16,
+		reflect.Int32,
+		reflect.Int64:
+		if i, err := strconv.ParseInt(s, 10, 64); err != nil {
+			return err
+		} else {
+			value.SetInt(i) //有符号整型通过SetInt
+		}
+	case reflect.Uint,
+		reflect.Uint8,
+		reflect.Uint16,
+		reflect.Uint32,
+		reflect.Uint64:
+		if i, err := strconv.ParseUint(s, 10, 64); err != nil {
+			return err
+		} else {
+			value.SetUint(i) //无符号整型需要通过SetUint
+		}
+	case reflect.Slice:
+		if s[0] == '[' && s[len(s)-1] == ']' {
+			arr := SplitJson(s[1 : len(s)-1]) //去除前后的[]
+			if len(arr) > 0 {
+				slice := reflect.ValueOf(v).Elem()                    //别忘了，v是指针
+				slice.Set(reflect.MakeSlice(typ, len(arr), len(arr))) //通过反射创建slice
+				for i := 0; i < len(arr); i++ {
+					eleValue := slice.Index(i)
+					eleType := eleValue.Type()
+					if eleType.Kind() != reflect.Ptr {
+						eleValue = eleValue.Addr()
+					}
+					if err := Unmarshal([]byte(arr[i]), eleValue.Interface()); err != nil {
+						return err
+					}
+				}
+			}
+		} else if s != "null" {
+			return fmt.Errorf("invalid json part: %s", s)
+		}
+	case reflect.Map:
+		if s[0] == '{' && s[len(s)-1] == '}' {
+			arr := SplitJson(s[1 : len(s)-1]) //去除前后的{}
+			if len(arr) > 0 {
+				mapValue := reflect.ValueOf(v).Elem()                //别忘了，v是指针
+				mapValue.Set(reflect.MakeMapWithSize(typ, len(arr))) //通过反射创建map
+				kType := typ.Key()                                   //获取map的key的Type
+				vType := typ.Elem()                                  //获取map的value的Type
+				for i := 0; i < len(arr); i++ {
+					brr := strings.Split(arr[i], ":")
+					if len(brr) != 2 {
+						return fmt.Errorf("invalid json part: %s", arr[i])
+					}
+
+					kValue := reflect.New(kType) //根据Type创建指针型的Value
+					if err := Unmarshal([]byte(brr[0]), kValue.Interface()); err != nil {
+						return err
+					}
+					vValue := reflect.New(vType) //根据Type创建指针型的Value
+					if err := Unmarshal([]byte(brr[1]), vValue.Interface()); err != nil {
+						return err
+					}
+					mapValue.SetMapIndex(kValue.Elem(), vValue.Elem()) //往map里面赋值
+				}
+			}
+		} else if s != "null" {
+			return fmt.Errorf("invalid json part: %s", s)
+		}
+	case reflect.Struct:
+		if s[0] == '{' && s[len(s)-1] == '}' {
+			arr := SplitJson(s[1 : len(s)-1])
+			if len(arr) > 0 {
+				fieldCount := typ.NumField()
+				//建立json tag到FieldName的映射关系
+				tag2Field := make(map[string]string, fieldCount)
+				for i := 0; i < fieldCount; i++ {
+					fieldType := typ.Field(i)
+					name := fieldType.Name
+					if len(fieldType.Tag.Get("json")) > 0 {
+						name = fieldType.Tag.Get("json")
+					}
+					tag2Field[name] = fieldType.Name
+				}
+
+				for _, ele := range arr {
+					brr := strings.SplitN(ele, ":", 2) //json的value里可能存在嵌套，所以用:分隔时限定个数为2
+					if len(brr) == 2 {
+						tag := strings.Trim(brr[0], " ")
+						if tag[0] == '"' && tag[len(tag)-1] == '"' { //json的key肯定是带""的
+							tag = tag[1 : len(tag)-1]                        //去除json key前后的""
+							if fieldName, exists := tag2Field[tag]; exists { //根据json key(即json tag)找到对应的FieldName
+								fieldValue := value.FieldByName(fieldName)
+								fieldType := fieldValue.Type()
+								if fieldType.Kind() != reflect.Ptr {
+									//如果内嵌不是指针，则声明时已经用0值初始化了，此处只需要根据json改写它的值
+									fieldValue = fieldValue.Addr()                                            //确保fieldValue指向指针类型，因为接下来要把fieldValue传给Unmarshal
+									if err := Unmarshal([]byte(brr[1]), fieldValue.Interface()); err != nil { //递归调用Unmarshal，给fieldValue的底层数据赋值
+										return err
+									}
+								} else {
+									//如果内嵌的是指针，则需要通过New()创建一个实例(申请内存空间)。不能给New()传指针型的Type，所以调一下Elem()
+									newValue := reflect.New(fieldType.Elem())                               //newValue代表的是指针
+									if err := Unmarshal([]byte(brr[1]), newValue.Interface()); err != nil { //递归调用Unmarshal，给fieldValue的底层数据赋值
+										return err
+									}
+									value.FieldByName(fieldName).Set(newValue) //把newValue赋给value的Field
+								}
+
+							} else {
+								fmt.Printf("字段%s找不到\n", tag)
+							}
+						} else {
+							return fmt.Errorf("invalid json part: %s", tag)
+						}
+					} else {
+						return fmt.Errorf("invalid json part: %s", ele)
+					}
+				}
+			}
+		} else if s != "null" {
+			return fmt.Errorf("invalid json part: %s", s)
+		}
+	default:
+		fmt.Printf("暂不支持类型:%s\n", typ.Kind().String())
+	}
+	return nil
+}
+
+// SplitJson 由于json字符串里存在{}[]等嵌套情况，直接按,分隔是不合适的
+func SplitJson(json string) []string {
+	rect := make([]string, 0, 10)
+	stack := list.New() //list是双端队列，用它来模拟栈
+	beginIndex := 0
+	for i, r := range json {
+		if r == rune('{') || r == rune('[') {
+			stack.PushBack(struct{}{}) //我们不关心栈里是什么，只关心栈里有没有元素
+		} else if r == rune('}') || r == rune(']') {
+			ele := stack.Back()
+			if ele != nil {
+				stack.Remove(ele) //删除栈顶元素
+			}
+		} else if r == rune(',') {
+			if stack.Len() == 0 { //栈为空时才可以按,分隔
+				rect = append(rect, json[beginIndex:i])
+				beginIndex = i + 1
+			}
+		}
+	}
+	rect = append(rect, json[beginIndex:])
+	return rect
+}
+
+// BinSearch 二分查找 数组得是升序
+func BinSearch(arr []int, findData int) int {
+	i := 0
+	low := 0
+	high := len(arr) - 1
+	for low <= high {
+		i++
+		mid := int(uint(low+high) >> 1)
+		if arr[mid] > findData {
+			high = mid - 1
+		} else if arr[mid] < findData {
+			low = mid + 1
+		} else {
+			fmt.Printf("查找了%v次\n", i)
+			return mid
+		}
+	}
+	return -1
+}
+
+// 实现set
+type Inner interface{}
+type Set struct {
+	m map[Inner]bool
+	*sync.RWMutex
+}
+
+func (s *Set) New() *Set {
+	return &Set{
+		m: map[Inner]bool{},
+	}
+}
+
+func (s *Set) Add(param Inner) {
+	s.Lock()
+	defer s.Unlock()
+	s.m[param] = true
 }
