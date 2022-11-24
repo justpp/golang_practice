@@ -1,7 +1,9 @@
 package main
 
-import "giao/practice"
+import (
+	"giao/practice/day"
+)
 
 func main() {
-	practice.TestMultiThread()
+	day.D24()
 }

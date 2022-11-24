@@ -137,3 +137,223 @@ func D14() {
 	b := +5
 	fmt.Printf("%d %+d b type:%s", a, b, reflect.ValueOf(b).Type())
 }
+
+// D15 字符串无法修改，[]byte 可以修改
+func D15() {
+	str := "hello"
+
+	a := []byte(str)
+	a[0] = 'T'
+
+	fmt.Println(string(a))
+}
+
+func D16() {
+	// map 要用make分配空间
+	//var m map[string]int
+	var m = make(map[string]int)
+	m["a"] = 1
+
+	if v, ok := m["n"]; ok {
+		fmt.Println(v)
+	}
+}
+
+type a interface {
+	showA()
+}
+type b interface {
+	showB()
+}
+type worker struct {
+	i int
+}
+
+func (w worker) showA() {
+	fmt.Println(w.i + 10)
+}
+
+func (w worker) showB() {
+	fmt.Println(w.i + 20)
+}
+
+// D17 虽然var声明的变量类型，但还是可以通过断言为其它更丰富的类型
+func D17() {
+	var a1 a = worker{3}
+	s := a1.(worker)
+	s.showA()
+	s.showB()
+}
+
+// D18 defer执行顺序、值参数和指针参数
+func D18() {
+	type person struct {
+		age int
+	}
+	p := &person{28}
+
+	defer fmt.Println(p.age)
+
+	defer func(p *person) {
+		fmt.Println(p.age)
+	}(p)
+
+	defer func() {
+		fmt.Println(p.age)
+	}()
+
+	p.age = 29
+}
+
+// D19 结构体是指针类型 重新赋值会导致变量指向的地址更改
+func D19() {
+	type person struct {
+		age int
+	}
+	p := &person{28}
+
+	defer fmt.Println(p.age)
+
+	defer func(p *person) {
+		fmt.Println(p.age)
+	}(p)
+
+	defer func() {
+		fmt.Println(p.age)
+	}()
+
+	p = &person{29}
+}
+
+type person interface {
+	speak(s string) string
+}
+
+type pp struct {
+}
+
+func (p *pp) speak(param string) (talk string) {
+	return param
+}
+
+func D20() {
+	// 因为pp实现的时指针类型的方法speak，
+	// 所以赋值时只能赋值指针类型
+	//var p person = pp{}
+	var p person = &pp{}
+	fmt.Println(p.speak("23423"))
+}
+
+// D21 当动态值和动态类型都为 nil 时，接口类型值才为 nil
+func D21() {
+	// 我猜测 指针类型未开辟空间 所以为nil
+	var a *pp
+	if a == nil {
+		fmt.Println("a is nil")
+	} else {
+		fmt.Println("a is not nil", a)
+	}
+	fmt.Println(reflect.TypeOf(a), "a")
+
+	// https://www.topgoer.cn/docs/gomianshiti/mian26 说是因为动态类型不是nil 但是通过反射打印类型 a,b是相同的
+	var b person = a
+	if b == nil {
+		fmt.Println("b is nil")
+	} else {
+		fmt.Println("b is not nil", b)
+	}
+	fmt.Println(reflect.TypeOf(a)) // *day.pp
+	fmt.Println(reflect.TypeOf(b)) // *day.pp
+}
+
+type direction int
+
+const (
+	north direction = iota
+	east
+	south
+	west
+)
+
+func (d direction) String() string {
+	return [...]string{"north", "east", "south", "west"}[d]
+}
+
+// D22 iota String 方法
+func D22() {
+	fmt.Println(west)
+}
+
+func D23() {
+	type math struct {
+		x, y int
+	}
+	//m := map[string]math{"h": {1, 2}}
+	// 改为指针类型
+	m := map[string]*math{"h": &math{1, 2}}
+
+	// 因为 map[string]math 是值类型，所以不能直接赋值
+	m["h"].x = 3
+
+	fmt.Println(m["h"])
+
+	//// 值类型赋值，不会改变原值
+	//m2 := m["h"]
+	//m2.x = 3
+	//
+	//// 使用零时变量提黄 键值
+	//m["h"] = m2
+	//
+	//fmt.Println(m)
+}
+
+var p *int
+
+func foo() (*int, error) {
+	var i int = 5
+	return &i, nil
+}
+
+func bar() {
+	//use p
+	fmt.Println(*p)
+}
+
+// D24 变量作用域。
+// 问题出在操作符:=，对于使用:=定义的变量，
+// 如果新变量与同名已定义的变量不在同一个作用域中，
+// 那么 Go 会新定义这个变量。
+// 对于本例来说，main() 函数里的 p 是新定义的变量，
+// 会遮住全局变量 p，导致执行到bar()时程序，全局变量 p 依然还是 nil，程序随即 Crash。
+func D24() {
+	var err error
+	p, err = foo()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	bar()
+	fmt.Println(*p)
+}
+
+// D25
+// 第一步执行r = n +1，
+// 接着执行第二个 defer，由于此时 f() 未定义，引发异常，
+// 随即执行第一个 defer，异常被 recover()，程序正常执行，
+// 最后 return。
+func D25() {
+	var f = func(n int) (r int) {
+		defer func() {
+			r += n
+			recover()
+		}()
+		var e func()
+
+		defer e()
+		e = func() {
+			r += 2
+		}
+		return n + 1
+	}
+	fmt.Println(f(3))
+}
