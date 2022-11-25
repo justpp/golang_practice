@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	day.D24()
+	day.D26()
 }
