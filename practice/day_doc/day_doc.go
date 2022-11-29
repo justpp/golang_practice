@@ -34,9 +34,7 @@ func (d *DayDoc) regUrls() {
 		fmt.Println("ReadAll err", err)
 		return
 	}
-	// 没有匹配到所有目录url qwq
-
-	compile := regexp.MustCompile(`<a.+?\s*href="(https://www.topgoer.cn/docs/gomianshiti/\w+?)"[^>]*title="(.+?)"[^>]*>`)
+	compile := regexp.MustCompile(`<a.+?\s*href="(https://www.topgoer.cn/docs/gomianshiti/.+?)"[^>]*title="(.+?)"[^>]*>`)
 	matches := compile.FindAllSubmatch(body, -1)
 	fmt.Println(len(matches))
 	for _, match := range matches {
