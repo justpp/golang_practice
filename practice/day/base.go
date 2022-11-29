@@ -1,6 +1,7 @@
 package day
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"time"
@@ -359,8 +360,10 @@ func D25() {
 }
 
 func change(s ...int) {
+	fmt.Printf("change before ptr %p\n", s)
 	s = append(s, 3)
-	fmt.Println(reflect.TypeOf(s).Kind())
+	fmt.Println("change", s)
+	fmt.Printf("change after ptr %p\n", s)
 }
 
 // D26 可变长参数 接收值时slice
@@ -373,8 +376,50 @@ func D26() {
 	slice := make([]int, 5, 5)
 	slice[0] = 1
 	slice[1] = 2
+	fmt.Printf("slice before ptr %p\n", slice)
 	change(slice...)
+	fmt.Printf("slice after ptr %p\n", slice)
 	fmt.Println(slice)
 	change(slice[0:2]...)
 	fmt.Println(slice)
+}
+
+// D27 forr 切片时拷贝的是指针的副本，其指向的还是相同的数组
+func D27() {
+	var a = []int{1, 2, 3, 4, 5}
+	var r [6]int
+	for i, i2 := range a {
+		if i == 0 {
+			a[1] = 12
+			a[2] = 13
+			// append生成了新的底层arr
+			a = append(a, 6)
+			a[1] = 2
+		}
+		r[i] = i2
+	}
+	fmt.Println("a", a)
+	fmt.Println("r", r)
+}
+
+// D28 map遍历顺序不确定性
+func D28() {
+	var m = map[string]int{
+		"AA": 2,
+		"BB": 3,
+		"CC": 4,
+	}
+	count := 0
+	for k, v := range m {
+		if count == 0 {
+			delete(m, "AA")
+		}
+		count++
+		fmt.Println(k, v)
+	}
+	fmt.Println("count", count)
+	var b bytes.Buffer
+	b.WriteString("234")
+	b.WriteString("666")
+	fmt.Println(b.String())
 }

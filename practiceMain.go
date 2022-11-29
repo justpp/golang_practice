@@ -1,9 +1,8 @@
 package main
 
-import (
-	"giao/practice/day"
-)
+import "giao/practice/day_doc"
 
 func main() {
-	day.D26()
+	doc := day_doc.DayDoc{}
+	doc.Run()
 }
