@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"time"
 )
@@ -69,18 +68,7 @@ func IsExists(dirName string) (bool, error) {
 	return false, nil
 }
 
-func CreateFile(fileName string, url string) {
-	resp, err := http.Get(url)
-	defer resp.Body.Close()
-	if err != nil {
-		fmt.Println("get file err", err)
-		return
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("get file err", err)
-		return
-	}
+func CreateFile(fileName string, body []byte) {
 	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY, os.ModePerm)
 	defer file.Close()
 	if err != nil {

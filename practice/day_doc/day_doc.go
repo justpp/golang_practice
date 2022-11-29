@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 	"sync"
 )
 
@@ -59,9 +60,28 @@ func (d *DayDoc) runDownload() {
 	wg.Add(len(d.Urls))
 	for _, s2 := range d.Urls {
 		go func(title string, url string) {
-			util.CreateFile(fmt.Sprintf("%s/%s.html", d.dir, title), url)
+			util.CreateFile(fmt.Sprintf("%s/%s.html", d.dir, title), []byte(d.getHtml(url)))
 			wg.Done()
 		}(s2[0], s2[1])
 	}
 	wg.Wait()
+}
+
+func (d *DayDoc) getHtml(url string) string {
+	resp, err := http.Get(url)
+	defer resp.Body.Close()
+	if err != nil {
+		fmt.Println("get file err", err)
+		return ""
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("get file err", err)
+		return ""
+	}
+	str := string(body)
+	for _, i2 := range d.Urls {
+		str = strings.Replace(str, i2[1], fmt.Sprintf("./%s.html", i2[0]), -1)
+	}
+	return strings.Replace(str, "/static/", "https://www.topgoer.cn/static/", -1)
 }
