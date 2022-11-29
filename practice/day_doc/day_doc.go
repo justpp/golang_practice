@@ -18,7 +18,7 @@ type DayDoc struct {
 func (d *DayDoc) Run() {
 	d.dir = "./download/day_doc"
 	d.regUrls()
-	d.runDownFile()
+	d.runDownload()
 }
 
 func (d *DayDoc) regUrls() {
@@ -34,6 +34,8 @@ func (d *DayDoc) regUrls() {
 		fmt.Println("ReadAll err", err)
 		return
 	}
+	// 没有匹配到所有目录url qwq
+
 	compile := regexp.MustCompile(`<a.+?\s*href="(https://www.topgoer.cn/docs/gomianshiti/\w+?)"[^>]*title="(.+?)"[^>]*>`)
 	matches := compile.FindAllSubmatch(body, -1)
 	fmt.Println(len(matches))
@@ -42,7 +44,7 @@ func (d *DayDoc) regUrls() {
 	}
 }
 
-func (d *DayDoc) runDownFile() {
+func (d *DayDoc) runDownload() {
 	// 指定一个空文件夹
 	if exists, _ := util.IsExists(d.dir); exists {
 		err := os.RemoveAll(d.dir)
@@ -50,8 +52,9 @@ func (d *DayDoc) runDownFile() {
 			return
 		}
 	}
-	err := os.Mkdir(d.dir, os.ModePerm)
+	err := os.MkdirAll(d.dir, os.ModePerm)
 	if err != nil {
+		fmt.Println("create dir err", err)
 		return
 	}
 	wg := sync.WaitGroup{}
