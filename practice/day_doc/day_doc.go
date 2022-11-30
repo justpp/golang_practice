@@ -19,10 +19,27 @@ type DayDoc struct {
 	cssJsUrls []string
 }
 
+func Gomianshiti() *DayDoc {
+	return &DayDoc{
+		"https://www.topgoer.cn",
+		"https://www.topgoer.cn/docs/gomianshiti/mianshiti",
+		"./download/day_doc",
+		nil,
+		nil,
+	}
+}
+
+func GolangDesign() *DayDoc {
+	return &DayDoc{
+		"https://www.topgoer.cn",
+		"https://www.topgoer.cn/docs/golang-design-pattern/golang-design-pattern-1cbgha2ltg796",
+		"./download/golang_design",
+		nil,
+		nil,
+	}
+}
+
 func (d *DayDoc) Run() {
-	d.domain = "https://www.topgoer.cn"
-	d.docUrl = "https://www.topgoer.cn/docs/gomianshiti/mianshiti"
-	d.dir = "./download/day_doc"
 	d.regUrls()
 	d.runDownload()
 }
@@ -65,7 +82,7 @@ func (d *DayDoc) regUrls() {
 	}...)
 
 	// 侧边栏链接
-	compile = regexp.MustCompile(`<a.+?\s*href="(https://www.topgoer.cn/docs/gomianshiti/.+?)"[^>]*title="(.+?)"[^>]*>`)
+	compile = regexp.MustCompile(`<a.+?\s*href="(https://www.topgoer.cn/docs/.+?)"[^>]*title="(.+?)"[^>]*>`)
 	matches = compile.FindAllSubmatch(body, -1)
 	for _, match := range matches {
 		d.Urls = append(d.Urls, [2]string{string(match[2]), string(match[1])})
@@ -133,14 +150,19 @@ func (d *DayDoc) getHtml(url string) string {
 	if strings.Index(url, "/static/") == -1 {
 		for _, i2 := range d.Urls {
 			// 替换本地路径
-			str = strings.Replace(str, i2[1], fmt.Sprintf("./%s.html", i2[0]), -1)
+			str = strings.Replace(str, i2[1], fmt.Sprintf("./%s.html", i2[0]), 1)
 			// 替换manual-title
 			str = strings.Replace(str, `go语言面试题`, "learn learn learn learn ", -1)
 		}
 		return strings.Replace(str, "/static/", "./static/", -1)
 	}
 	if strings.Index(url, "/static/") > -1 {
-		return strings.Replace(str, "loadDocument", "loadDocumentBak", -1)
+		return strings.Replace(str, `function loadDocument($url, $id, $callback) {`, `
+function loadDocument($url, $id, $callback) {
+    window.open($url,'_self')
+    events.trigger('article.open', {$url: $url, $id: $id});
+    return false;
+`, 1)
 	}
 	return str
 }
