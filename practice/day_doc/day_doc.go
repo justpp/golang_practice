@@ -12,19 +12,23 @@ import (
 )
 
 type DayDoc struct {
-	dir  string
-	Urls [][2]string
+	domain    string
+	docUrl    string
+	dir       string
+	Urls      [][2]string
+	cssJsUrls []string
 }
 
 func (d *DayDoc) Run() {
+	d.domain = "https://www.topgoer.cn"
+	d.docUrl = "https://www.topgoer.cn/docs/gomianshiti/mianshiti"
 	d.dir = "./download/day_doc"
 	d.regUrls()
 	d.runDownload()
 }
 
 func (d *DayDoc) regUrls() {
-	mainUrl := "https://www.topgoer.cn/docs/gomianshiti/mianshiti"
-	resp, err := http.Get(mainUrl)
+	resp, err := http.Get(d.docUrl)
 	defer resp.Body.Close()
 	if err != nil {
 		fmt.Println("get err", err)
@@ -35,9 +39,34 @@ func (d *DayDoc) regUrls() {
 		fmt.Println("ReadAll err", err)
 		return
 	}
-	compile := regexp.MustCompile(`<a.+?\s*href="(https://www.topgoer.cn/docs/gomianshiti/.+?)"[^>]*title="(.+?)"[^>]*>`)
+	// css链接
+	compile := regexp.MustCompile(`<link.+?\s*href="(/static/.+?)"[^>]*>`)
 	matches := compile.FindAllSubmatch(body, -1)
-	fmt.Println(len(matches))
+	for _, match := range matches {
+		d.cssJsUrls = append(d.cssJsUrls, string(match[1]))
+	}
+	// js链接
+	compile = regexp.MustCompile(`<script.+?\s*src="(/static/.+?)"[^>]*>`)
+	matches = compile.FindAllSubmatch(body, -1)
+	for _, match := range matches {
+		d.cssJsUrls = append(d.cssJsUrls, string(match[1]))
+	}
+	// 文件内遗漏的文件链接
+	d.cssJsUrls = append(d.cssJsUrls, []string{
+		"/static/bootstrap/css/bootstrap.min.css.map",
+		"/static/editor.md/fonts/fontawesome-webfont.woff2?v=4.3.0",
+		"/static/layer/skin/default/layer.css?v=3.0.3303",
+		"/static/editor.md/fonts/fontawesome-webfont.woff?v=4.3.0",
+		"/static/font-awesome/fonts/fontawesome-webfont.woff2?v=4.7.0",
+		"/static/font-awesome/fonts/fontawesome-webfont.woff?v=4.7.0",
+		"/static/font-awesome/fonts/fontawesome-webfont.ttf?v=4.7.0",
+		"/static/jstree/3.3.4/themes/default/throbber.gif",
+		"/static/jstree/3.3.4/themes/default/32px.png",
+	}...)
+
+	// 侧边栏链接
+	compile = regexp.MustCompile(`<a.+?\s*href="(https://www.topgoer.cn/docs/gomianshiti/.+?)"[^>]*title="(.+?)"[^>]*>`)
+	matches = compile.FindAllSubmatch(body, -1)
 	for _, match := range matches {
 		d.Urls = append(d.Urls, [2]string{string(match[2]), string(match[1])})
 	}
@@ -57,10 +86,31 @@ func (d *DayDoc) runDownload() {
 		return
 	}
 	wg := sync.WaitGroup{}
+	// css、js
+	wg.Add(len(d.cssJsUrls))
+	for _, s2 := range d.cssJsUrls {
+		split := strings.Split(s2, "/")
+		fileDir := fmt.Sprintf("%s%s", d.dir, strings.Join(split[:len(split)-1], "/"))
+		if exists, _ := util.IsExists(fileDir); !exists {
+			err := os.MkdirAll(fileDir, os.ModePerm)
+			if err != nil {
+				fmt.Println("create css、js dir err", err)
+				return
+			}
+		}
+		filename := strings.Split(split[len(split)-1], "?")[0]
+		go func(name string, url string) {
+			filename := fmt.Sprintf("%s/%s", fileDir, name)
+			url = fmt.Sprintf("%s%s", d.domain, url)
+			util.CreateFile(filename, []byte(d.getHtml(url)))
+			wg.Done()
+		}(filename, s2)
+	}
+	// 侧边栏链接
 	wg.Add(len(d.Urls))
 	for _, s2 := range d.Urls {
-		go func(title string, url string) {
-			util.CreateFile(fmt.Sprintf("%s/%s.html", d.dir, title), []byte(d.getHtml(url)))
+		go func(name string, url string) {
+			util.CreateFile(fmt.Sprintf("%s/%s.html", d.dir, name), []byte(d.getHtml(url)))
 			wg.Done()
 		}(s2[0], s2[1])
 	}
@@ -80,8 +130,17 @@ func (d *DayDoc) getHtml(url string) string {
 		return ""
 	}
 	str := string(body)
-	for _, i2 := range d.Urls {
-		str = strings.Replace(str, i2[1], fmt.Sprintf("./%s.html", i2[0]), -1)
+	if strings.Index(url, "/static/") == -1 {
+		for _, i2 := range d.Urls {
+			// 替换本地路径
+			str = strings.Replace(str, i2[1], fmt.Sprintf("./%s.html", i2[0]), -1)
+			// 替换manual-title
+			str = strings.Replace(str, `go语言面试题`, "learn learn learn learn ", -1)
+		}
+		return strings.Replace(str, "/static/", "./static/", -1)
 	}
-	return strings.Replace(str, "/static/", "https://www.topgoer.cn/static/", -1)
+	if strings.Index(url, "/static/") > -1 {
+		return strings.Replace(str, "loadDocument", "loadDocumentBak", -1)
+	}
+	return str
 }
