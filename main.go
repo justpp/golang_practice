@@ -1,9 +1,9 @@
 package main
 
 import (
-	"giao/jd"
+	"giao/practice/day"
 )
 
 func main() {
-	jd.Login()
+	day.D42()
 }

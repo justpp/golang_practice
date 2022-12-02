@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"reflect"
+	"runtime"
 	"time"
 )
 
@@ -422,4 +423,201 @@ func D28() {
 	b.WriteString("234")
 	b.WriteString("666")
 	fmt.Println(b.String())
+}
+
+// D30 强制类型转换
+func D30() {
+	type myInt int
+	var i int = 4
+
+	// 类型名称不同，不能直接赋值
+	//var m myInt = i
+
+	// 类型断言不是这个写法啊
+	//var m myInt = (myInt)i
+
+	// 类型断言 判断的是动态类型，不是类型转换啊
+	//var m myInt = i.(int)
+
+	// 强制类型转换
+	var m myInt = myInt(i)
+	fmt.Println(i, m)
+}
+
+// D31 switch
+func D31() {
+	a := 2
+	switch a {
+	case 1:
+		fmt.Println("1")
+	case 2, 4, 6, 7, 8: // 一个分支可以有多个case值
+		fmt.Println("2")
+		fallthrough // 通过fallthrough进入下一个case
+	case 3:
+		fmt.Println("3")
+	default:
+		fmt.Println("default")
+	}
+}
+
+type integer1 int
+
+func (i *integer1) Add(integer12 integer1) integer1 {
+	return *i + integer12
+}
+
+// D32 类型断言 方法集
+func D32() {
+	var a integer1 = 2
+	var b integer1 = 2
+
+	var i interface{} = &a
+
+	fmt.Println(i.(*integer1).Add(b))
+}
+
+func D33() {
+	i := 1
+	i++
+
+	// 自增是语句，不是表达式，不能赋值给其他变量
+	//j = i++
+
+	// 没有i--
+	// i--
+	fmt.Println(i)
+}
+
+func D34() {
+	// 声明切片时
+	// make必须携带长度
+	// 简单切片表达式 []int{...}必须有值
+	// 通过var声明的零值切片可以在append()函数直接使用，无需初始化。
+	a := make([]int, 0)
+	b := []int{1}
+	var c []int
+	c = append(c, 1)
+	fmt.Println(a, b, c)
+}
+
+// D35 select 会随机选择一个可用通道
+func D35() {
+	runtime.GOMAXPROCS(1)
+	ch1 := make(chan int, 2)
+	ch2 := make(chan int, 2)
+	ch1 <- 1
+	ch2 <- 2
+	ch1 <- 5
+	ch2 <- 5
+	select {
+	case value := <-ch1:
+		fmt.Println("|", value)
+	case <-ch2:
+		//panic("2332")
+	}
+	if v, ok := <-ch1; ok {
+		fmt.Println("ch1", v)
+	}
+	if v, ok := <-ch2; ok {
+		fmt.Println("ch2", v)
+	}
+}
+
+// D36
+// 从一个已经关闭的chan中读取只能读到该类型的零值，
+// 无论其有没有缓冲，都不会死锁
+func D36() {
+	ch := make(chan int)
+	close(ch)
+	fmt.Println(<-ch)
+}
+
+// D37 常量。
+// 常量不同于变量的在运行期分配内存，常量通常会被编译器在预处理阶段直接展开，作为指令数据使用，所以常量无法寻址。
+func D37() {
+	const i = 9
+	var j = 10
+	//fmt.Println(&i)
+	fmt.Println(&j)
+}
+
+type user struct{}
+type user1 user
+type user2 = user
+
+func (u user1) m1() {
+	fmt.Println("m1")
+}
+
+func (u user) m2() {
+	fmt.Println("m2")
+}
+
+// D38
+// type user1 user 创建了新类型
+// type user2 = user 类型别名
+// user1 并没有继承user的方法
+func D38() {
+	var u1 user1
+	var u2 user2
+	u1.m1()
+	u2.m2()
+}
+
+// D39 interface 的内部结构，
+// 我们知道接口除了有静态类型，还有动态类型和动态值，
+// 当且仅当动态值和动态类型都为 nil 时，接口类型值才为 nil。
+// 这里的 x 的动态类型是 *int，所以 x 不为 nil。
+func D39() {
+	var f = func(x interface{}) {
+		if x == nil {
+			fmt.Println("empty")
+			return
+		}
+		fmt.Println("not empty")
+	}
+	var i *int = nil
+	f(i)
+}
+
+// D40 先定义下，第一个协程为 A 协程，第二个协程为 B 协程；
+// 当 A 协程还没起时，主协程已经将 channel 关闭了，
+// 当 A 协程往关闭的 channel 发送数据时会 panic，
+// panic: send on closed channel。
+func D40() {
+	ch := make(chan int, 100)
+	go func() {
+		for i := 0; i < 10; i++ {
+			fmt.Println("in", i)
+			ch <- i
+		}
+	}()
+
+	go func() {
+		for {
+			if v, ok := <-ch; ok {
+				fmt.Println("out", v)
+			}
+		}
+	}()
+	//close(ch)
+	fmt.Println("end")
+	time.Sleep(time.Second * 10)
+}
+
+// D41 有方向的chan不能关闭
+func D41() {
+	var f = func(ch <-chan int) {
+		//close(ch)
+	}
+	ch := make(chan int)
+	f(ch)
+}
+
+// D42 ，字面量初始化切片时候可以指定索引，
+// 没有指定索引的元素会在前一个索引基础之上加一，
+//所以输出[1 0 2 3]，而不是[1 3 2]
+func D42() {
+	var s = []int{2: 2, 3, 1: 1}
+	fmt.Println(s)
 }
