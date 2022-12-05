@@ -10,9 +10,15 @@ import (
 
 // D1 延迟函数defer 先进后出 最后输出panic
 func D1() {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println(err)
+		}
+	}()
 	defer func() { fmt.Println("前") }()
 	defer func() { fmt.Println("中") }()
 	defer func() { fmt.Println("后") }()
+
 	panic("panic err")
 }
 
@@ -137,7 +143,7 @@ func D13() {
 func D14() {
 	a := -5
 	b := +5
-	fmt.Printf("%d %+d b type:%s", a, b, reflect.ValueOf(b).Type())
+	fmt.Printf("%d %+d b type:%s\n", a, b, reflect.ValueOf(b).Type())
 }
 
 // D15 字符串无法修改，[]byte 可以修改
@@ -616,8 +622,57 @@ func D41() {
 
 // D42 ，字面量初始化切片时候可以指定索引，
 // 没有指定索引的元素会在前一个索引基础之上加一，
-//所以输出[1 0 2 3]，而不是[1 3 2]
+// 所以输出[1 0 2 3]，而不是[1 3 2]
 func D42() {
 	var s = []int{2: 2, 3, 1: 1}
 	fmt.Println(s)
+}
+
+var gvar int
+
+// D43 未使用变量。
+// 如果有未使用的变量代码将编译失败。
+// 但也有例外，函数中声明的变量必须要使用，但可以有未使用的全局变量。函数的参数未使用也是可以的。
+// 如果你给未使用的变量分配了一个新值，代码也还是会编译失败。你需要在某个地方使用这个变量，才能让编译器愉快的编译。
+func D43() {
+	var one int
+	_ = one
+	b := 2
+	fmt.Println(b)
+	var c int
+	c = 3
+	b = c
+
+	func(unesed string) {
+		fmt.Println("unused,no complied err", unesed)
+	}("wrong?")
+}
+
+type config1 struct {
+	Daemon string
+}
+
+func (c *config1) String() string {
+	return fmt.Sprintf("print %v", c)
+}
+
+// D44 运行错误 fatal error: stack overflow
+// 如果类型实现 String() 方法，当格式化输出时会自动使用 String() 方法。
+// 上面这段代码是在该类型的 String() 方法内使用格式化输出，导致递归调用，最后抛错。
+func D44() {
+	c := &config1{"@34"}
+	fmt.Println(c.String())
+}
+
+// D45
+// 类型断言语法：i.(Type)，其中 i 是接口，Type 是类型或接口。
+// 编译时会自动检测 i 的动态类型与 Type 是否一致。
+// 但是，如果动态类型不存在，则断言总是失败
+func D45() {
+	x := interface{}(nil)
+	y := (*int)(nil)
+	a := x == y
+	b := y == nil
+	_, c := x.(interface{})
+	fmt.Println(a, b, c)
 }
