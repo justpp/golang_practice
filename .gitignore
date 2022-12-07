@@ -12,3 +12,4 @@ go.sum
 
 /tour/blog/storage/logs/app.log
 /download/
+/wx/env.yaml
