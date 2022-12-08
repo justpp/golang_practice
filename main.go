@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	wx.WxServer()
+	wx.Server()
 }
