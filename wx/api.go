@@ -34,7 +34,7 @@ type UserInfoResT struct {
 	Errmsg     string      `json:"errmsg"`
 }
 
-var userInfo UserInfoResT
+var userInfo *UserInfoResT
 
 // CheckSignature 接口服务器验证
 func CheckSignature(c *gin.Context) {
@@ -88,27 +88,28 @@ func fetchAccessToken(code string) *accessTokenRespT {
 	return &respT
 }
 
-func fetUserInfo(accessToken, openid string) UserInfoResT {
+func fetUserInfo(accessToken, openid string) *UserInfoResT {
 	apiUrl := "https://api.weixin.qq.com/sns/userinfo" +
 		"?access_token=" + accessToken +
 		"&openid=" + openid +
 		"&lang=zh_CN"
 	resp, err := http.Get(apiUrl)
 	if err != nil {
-		return UserInfoResT{}
+		return nil
 	}
 	defer resp.Body.Close()
 	var u UserInfoResT
 
 	all, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return u
+		return nil
 	}
 	json.Unmarshal(all, u)
+	log.Println("fetUserInfo content", string(all))
 	if u.Errcode != 0 {
 		log.Println("fetUserInfo err", u.Errcode, u.Errmsg)
 	}
-	return u
+	return &u
 }
 
 func getUserInfo(c *gin.Context) {
