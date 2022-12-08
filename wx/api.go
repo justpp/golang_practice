@@ -57,9 +57,10 @@ func fetchCode(c *gin.Context) {
 		"?appid=" + appId +
 		"&redirect_uri=" + RedirectUri +
 		"&response_type=code" +
-		"&scope=snsapi_base" +
+		"&scope=snsapi_userinfo" +
 		"&state=giao" +
 		"#wechat_redirect"
+	log.Println("oauthUrl", oauthUrl)
 	c.Redirect(http.StatusFound, oauthUrl)
 }
 
@@ -120,7 +121,7 @@ func getUserInfo(c *gin.Context) {
 		c.Writer.Write([]byte(userInfo.Errmsg))
 		return
 	}
-	log.Println(userInfo)
+	log.Println("userInfo", userInfo)
 	c.HTML(http.StatusOK, "index.html", gin.H{
 		"userInfo": userInfo,
 		"title":    "啦啦啦说了",
