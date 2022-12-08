@@ -52,7 +52,7 @@ func CheckSignature(c *gin.Context) {
 }
 
 func fetchCode(c *gin.Context) {
-	RedirectUri := url.QueryEscape("http://152.69.198.203/fetch_access_token")
+	RedirectUri := url.QueryEscape("http://152.69.198.203/get_userinfo")
 	oauthUrl := "https://open.weixin.qq.com/connect/oauth2/authorize" +
 		"?appid=" + appId +
 		"&redirect_uri=" + RedirectUri +
