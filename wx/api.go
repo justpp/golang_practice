@@ -104,7 +104,7 @@ func fetUserInfo(accessToken, openid string) *UserInfoResT {
 	if err != nil {
 		return nil
 	}
-	json.Unmarshal(all, u)
+	json.Unmarshal(all, &u)
 	log.Println("fetUserInfo content", string(all))
 	log.Println("u", u)
 	if u.Errcode != 0 {
