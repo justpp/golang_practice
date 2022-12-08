@@ -126,6 +126,6 @@ func getUserInfo(c *gin.Context) {
 	log.Println("userInfo", userInfo)
 	c.HTML(http.StatusOK, "index.html", gin.H{
 		"userInfo": userInfo,
-		"title":    "啦啦啦说了",
+		"title":    "啦啦啦说了.",
 	})
 }
