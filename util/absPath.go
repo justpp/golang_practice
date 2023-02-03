@@ -55,3 +55,9 @@ func GetCurrentAbPath() string {
 	}
 	return dir
 }
+
+func CheckErr(err error) {
+	if err != err {
+		panic(err)
+	}
+}
