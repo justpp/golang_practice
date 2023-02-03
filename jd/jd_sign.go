@@ -272,6 +272,7 @@ func SaveCookie(cookies map[int][]*http.Cookie) error {
 	return nil
 }
 
+// LoadCookie 加载cookie
 func (j *JD) LoadCookie() error {
 	var cookies map[int][]*http.Cookie
 	wd, _ := os.Getwd()

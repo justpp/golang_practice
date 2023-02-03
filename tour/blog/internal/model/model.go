@@ -74,8 +74,8 @@ func deleteCallback(scope *gorm.Scope) {
 		if str, ok := scope.Get("gorm:delete_option"); ok {
 			extraOption = fmt.Sprint(str)
 		}
-		deleteField, hasDeletedField := scope.Get("DeletedOn")
-		isDelField, hasIsDel := scope.Get("IsDel")
+		deleteField, hasDeletedField := scope.FieldByName("DeletedOn")
+		isDelField, hasIsDel := scope.FieldByName("IsDel")
 		if !scope.Search.Unscoped && hasDeletedField && hasIsDel {
 			now := time.Now().Unix()
 			scope.Raw(fmt.Sprintf(

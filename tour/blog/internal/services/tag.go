@@ -48,6 +48,7 @@ func (s *Service) UpdateTag(param *UpdateTagRequest) error {
 	return s.dao.UpdateTag(param.Id, param.Name, param.State, param.ModifiedBy)
 }
 
+// @Summary sdff
 func (s *Service) DelTag(param *DelTagRequest) error {
 	return s.dao.Del(param.Id)
 }

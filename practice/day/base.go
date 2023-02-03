@@ -675,4 +675,5 @@ func D45() {
 	b := y == nil
 	_, c := x.(interface{})
 	fmt.Println(a, b, c)
+	fmt.Println(reflect.TypeOf(x), reflect.TypeOf(y))
 }

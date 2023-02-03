@@ -44,7 +44,8 @@ func (t Tag) List(c *gin.Context) {
 	response.ToResponseList(tags, totalRows)
 	return
 }
-func (t Tag) Get(*gin.Context)    {}
+func (t Tag) Get(c *gin.Context) {
+}
 func (t Tag) Create(*gin.Context) {}
 func (t Tag) Update(*gin.Context) {}
 func (t Tag) Delete(*gin.Context) {}

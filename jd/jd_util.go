@@ -25,7 +25,7 @@ func (j *JD) NewRequestWithHead(Method, URL string, HeaderMap map[string]string,
 	return req, nil
 }
 
-func (j JD) createUrlWithArgs(u string, argsMap map[string]string) string {
+func (j *JD) createUrlWithArgs(u string, argsMap map[string]string) string {
 	args := url.Values{}
 	for i, v := range argsMap {
 		args.Add(i, v)
@@ -60,18 +60,23 @@ func CookieStr2Json() error {
 	var cookiesArr = make(map[int][]*http.Cookie)
 	var count int
 	for {
-		lineStr, err := reader.ReadString('\n')
-		// net/http cookie验证不能有双引号
-		lineStr = strings.Replace(lineStr, "\"", "", -1)
+		lineStrByte, _, err := reader.ReadLine()
+		if err == io.EOF {
+			break
+		}
+		// custom_net/http cookie验证不能有双引号
+		lineStr := strings.Replace(string(lineStrByte), "\"", "", -1)
 		if err != nil {
 			break
 		}
 		var cookies []*http.Cookie
 		for _, i := range strings.Split(strings.TrimSpace(lineStr), ";") {
 			s := strings.Split(i, "=")
-			name := s[0]
+			name := strings.TrimSpace(s[0])
 			val := s[1]
-
+			if !strings.HasPrefix(name, "pt") {
+				continue
+			}
 			cookies = append(cookies, &http.Cookie{
 				Name:   name,
 				Value:  val,

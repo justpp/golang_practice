@@ -14,9 +14,11 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/big"
 	"net/http"
 	"os"
 	"reflect"
+	"runtime/trace"
 	"strconv"
 	"strings"
 	"sync"
@@ -211,7 +213,7 @@ type Person struct {
 
 func (p *Person) SetDream(dreams []string) {
 	// 修改切片将影响结构体内的值
-	//p.dreams = dreams
+	// p.dreams = dreams
 
 	// 正确做法 先开辟空间 再复制
 	p.dreams = make([]string, len(dreams))
@@ -346,7 +348,7 @@ func PracticeSelectChan() {
 	launch()
 }
 
-//**************************
+// **************************
 
 func PracticeNetHttp() {
 	http.HandleFunc("/apiTest", func(writer http.ResponseWriter, request *http.Request) {
@@ -366,9 +368,9 @@ func PracticeNetHttp() {
 
 func DownPic() {
 	// 图片以花瓣网的图片为例
-	//imgUrl := "http://hbimg.b0.upaiyun.com/32f065b3afb3fb36b75a5cbc90051b1050e1e6b6e199-Ml6q9F_fw320"
+	// imgUrl := "http://hbimg.b0.upaiyun.com/32f065b3afb3fb36b75a5cbc90051b1050e1e6b6e199-Ml6q9F_fw320"
 	imgUrl := "https://www.liwenzhou.com/images/qrcode_for_gzh.jpg"
-	//imgUrl := "https://qr.m.jd.com/show?appid=133&size=300&t="
+	// imgUrl := "https://qr.m.jd.com/show?appid=133&size=300&t="
 
 	res, err := http.Get(imgUrl)
 	if err != nil {
@@ -667,8 +669,8 @@ type User struct {
 //	   String() string
 //	} 在打印结构体内部变量是指针类型时会自动调用结构体的String方法
 //
-//	func (u User) String 可以被打印变量自动调用
-//	func (u *User) String 可以被打印指针变量调用
+// func (u User) String 可以被打印变量自动调用
+// func (u *User) String 可以被打印指针变量调用
 func (u *User) String() string {
 	return fmt.Sprintf("ID:%v name:%v\n", u.Id, *u.Name)
 }
@@ -958,7 +960,7 @@ func HeapSort(arr []int) []int {
 
 func Unmarshal(data []byte, v interface{}) error {
 	s := string(data)
-	//去除前后的连续空格
+	// 去除前后的连续空格
 	s = strings.TrimLeft(s, " ")
 	s = strings.TrimRight(s, " ")
 	if len(s) == 0 {
@@ -966,17 +968,17 @@ func Unmarshal(data []byte, v interface{}) error {
 	}
 	typ := reflect.TypeOf(v)
 	value := reflect.ValueOf(v)
-	if typ.Kind() != reflect.Ptr { //因为要修改v，必须传指针
+	if typ.Kind() != reflect.Ptr { // 因为要修改v，必须传指针
 		return errors.New("must pass pointer parameter")
 	}
 
-	typ = typ.Elem() //解析指针
+	typ = typ.Elem() // 解析指针
 	value = value.Elem()
 
 	switch typ.Kind() {
 	case reflect.String:
 		if s[0] == '"' && s[len(s)-1] == '"' {
-			value.SetString(s[1 : len(s)-1]) //去除前后的""
+			value.SetString(s[1 : len(s)-1]) // 去除前后的""
 		} else {
 			return fmt.Errorf("invalid json part: %s", s)
 		}
@@ -991,7 +993,7 @@ func Unmarshal(data []byte, v interface{}) error {
 		if f, err := strconv.ParseFloat(s, 64); err != nil {
 			return err
 		} else {
-			value.SetFloat(f) //通过reflect.Value修改原始数据的值
+			value.SetFloat(f) // 通过reflect.Value修改原始数据的值
 		}
 	case reflect.Int,
 		reflect.Int8,
@@ -1001,7 +1003,7 @@ func Unmarshal(data []byte, v interface{}) error {
 		if i, err := strconv.ParseInt(s, 10, 64); err != nil {
 			return err
 		} else {
-			value.SetInt(i) //有符号整型通过SetInt
+			value.SetInt(i) // 有符号整型通过SetInt
 		}
 	case reflect.Uint,
 		reflect.Uint8,
@@ -1011,14 +1013,14 @@ func Unmarshal(data []byte, v interface{}) error {
 		if i, err := strconv.ParseUint(s, 10, 64); err != nil {
 			return err
 		} else {
-			value.SetUint(i) //无符号整型需要通过SetUint
+			value.SetUint(i) // 无符号整型需要通过SetUint
 		}
 	case reflect.Slice:
 		if s[0] == '[' && s[len(s)-1] == ']' {
-			arr := SplitJson(s[1 : len(s)-1]) //去除前后的[]
+			arr := SplitJson(s[1 : len(s)-1]) // 去除前后的[]
 			if len(arr) > 0 {
-				slice := reflect.ValueOf(v).Elem()                    //别忘了，v是指针
-				slice.Set(reflect.MakeSlice(typ, len(arr), len(arr))) //通过反射创建slice
+				slice := reflect.ValueOf(v).Elem()                    // 别忘了，v是指针
+				slice.Set(reflect.MakeSlice(typ, len(arr), len(arr))) // 通过反射创建slice
 				for i := 0; i < len(arr); i++ {
 					eleValue := slice.Index(i)
 					eleType := eleValue.Type()
@@ -1035,27 +1037,27 @@ func Unmarshal(data []byte, v interface{}) error {
 		}
 	case reflect.Map:
 		if s[0] == '{' && s[len(s)-1] == '}' {
-			arr := SplitJson(s[1 : len(s)-1]) //去除前后的{}
+			arr := SplitJson(s[1 : len(s)-1]) // 去除前后的{}
 			if len(arr) > 0 {
-				mapValue := reflect.ValueOf(v).Elem()                //别忘了，v是指针
-				mapValue.Set(reflect.MakeMapWithSize(typ, len(arr))) //通过反射创建map
-				kType := typ.Key()                                   //获取map的key的Type
-				vType := typ.Elem()                                  //获取map的value的Type
+				mapValue := reflect.ValueOf(v).Elem()                // 别忘了，v是指针
+				mapValue.Set(reflect.MakeMapWithSize(typ, len(arr))) // 通过反射创建map
+				kType := typ.Key()                                   // 获取map的key的Type
+				vType := typ.Elem()                                  // 获取map的value的Type
 				for i := 0; i < len(arr); i++ {
 					brr := strings.Split(arr[i], ":")
 					if len(brr) != 2 {
 						return fmt.Errorf("invalid json part: %s", arr[i])
 					}
 
-					kValue := reflect.New(kType) //根据Type创建指针型的Value
+					kValue := reflect.New(kType) // 根据Type创建指针型的Value
 					if err := Unmarshal([]byte(brr[0]), kValue.Interface()); err != nil {
 						return err
 					}
-					vValue := reflect.New(vType) //根据Type创建指针型的Value
+					vValue := reflect.New(vType) // 根据Type创建指针型的Value
 					if err := Unmarshal([]byte(brr[1]), vValue.Interface()); err != nil {
 						return err
 					}
-					mapValue.SetMapIndex(kValue.Elem(), vValue.Elem()) //往map里面赋值
+					mapValue.SetMapIndex(kValue.Elem(), vValue.Elem()) // 往map里面赋值
 				}
 			}
 		} else if s != "null" {
@@ -1066,7 +1068,7 @@ func Unmarshal(data []byte, v interface{}) error {
 			arr := SplitJson(s[1 : len(s)-1])
 			if len(arr) > 0 {
 				fieldCount := typ.NumField()
-				//建立json tag到FieldName的映射关系
+				// 建立json tag到FieldName的映射关系
 				tag2Field := make(map[string]string, fieldCount)
 				for i := 0; i < fieldCount; i++ {
 					fieldType := typ.Field(i)
@@ -1078,27 +1080,27 @@ func Unmarshal(data []byte, v interface{}) error {
 				}
 
 				for _, ele := range arr {
-					brr := strings.SplitN(ele, ":", 2) //json的value里可能存在嵌套，所以用:分隔时限定个数为2
+					brr := strings.SplitN(ele, ":", 2) // json的value里可能存在嵌套，所以用:分隔时限定个数为2
 					if len(brr) == 2 {
 						tag := strings.Trim(brr[0], " ")
-						if tag[0] == '"' && tag[len(tag)-1] == '"' { //json的key肯定是带""的
-							tag = tag[1 : len(tag)-1]                        //去除json key前后的""
-							if fieldName, exists := tag2Field[tag]; exists { //根据json key(即json tag)找到对应的FieldName
+						if tag[0] == '"' && tag[len(tag)-1] == '"' { // json的key肯定是带""的
+							tag = tag[1 : len(tag)-1]                        // 去除json key前后的""
+							if fieldName, exists := tag2Field[tag]; exists { // 根据json key(即json tag)找到对应的FieldName
 								fieldValue := value.FieldByName(fieldName)
 								fieldType := fieldValue.Type()
 								if fieldType.Kind() != reflect.Ptr {
-									//如果内嵌不是指针，则声明时已经用0值初始化了，此处只需要根据json改写它的值
-									fieldValue = fieldValue.Addr()                                            //确保fieldValue指向指针类型，因为接下来要把fieldValue传给Unmarshal
-									if err := Unmarshal([]byte(brr[1]), fieldValue.Interface()); err != nil { //递归调用Unmarshal，给fieldValue的底层数据赋值
+									// 如果内嵌不是指针，则声明时已经用0值初始化了，此处只需要根据json改写它的值
+									fieldValue = fieldValue.Addr()                                            // 确保fieldValue指向指针类型，因为接下来要把fieldValue传给Unmarshal
+									if err := Unmarshal([]byte(brr[1]), fieldValue.Interface()); err != nil { // 递归调用Unmarshal，给fieldValue的底层数据赋值
 										return err
 									}
 								} else {
-									//如果内嵌的是指针，则需要通过New()创建一个实例(申请内存空间)。不能给New()传指针型的Type，所以调一下Elem()
-									newValue := reflect.New(fieldType.Elem())                               //newValue代表的是指针
-									if err := Unmarshal([]byte(brr[1]), newValue.Interface()); err != nil { //递归调用Unmarshal，给fieldValue的底层数据赋值
+									// 如果内嵌的是指针，则需要通过New()创建一个实例(申请内存空间)。不能给New()传指针型的Type，所以调一下Elem()
+									newValue := reflect.New(fieldType.Elem())                               // newValue代表的是指针
+									if err := Unmarshal([]byte(brr[1]), newValue.Interface()); err != nil { // 递归调用Unmarshal，给fieldValue的底层数据赋值
 										return err
 									}
-									value.FieldByName(fieldName).Set(newValue) //把newValue赋给value的Field
+									value.FieldByName(fieldName).Set(newValue) // 把newValue赋给value的Field
 								}
 
 							} else {
@@ -1124,18 +1126,18 @@ func Unmarshal(data []byte, v interface{}) error {
 // SplitJson 由于json字符串里存在{}[]等嵌套情况，直接按,分隔是不合适的
 func SplitJson(json string) []string {
 	rect := make([]string, 0, 10)
-	stack := list.New() //list是双端队列，用它来模拟栈
+	stack := list.New() // list是双端队列，用它来模拟栈
 	beginIndex := 0
 	for i, r := range json {
 		if r == rune('{') || r == rune('[') {
-			stack.PushBack(struct{}{}) //我们不关心栈里是什么，只关心栈里有没有元素
+			stack.PushBack(struct{}{}) // 我们不关心栈里是什么，只关心栈里有没有元素
 		} else if r == rune('}') || r == rune(']') {
 			ele := stack.Back()
 			if ele != nil {
-				stack.Remove(ele) //删除栈顶元素
+				stack.Remove(ele) // 删除栈顶元素
 			}
 		} else if r == rune(',') {
-			if stack.Len() == 0 { //栈为空时才可以按,分隔
+			if stack.Len() == 0 { // 栈为空时才可以按,分隔
 				rect = append(rect, json[beginIndex:i])
 				beginIndex = i + 1
 			}
@@ -1182,4 +1184,93 @@ func (s *Set) Add(param Inner) {
 	s.Lock()
 	defer s.Unlock()
 	s.m[param] = true
+}
+
+func Trace() {
+	f, err := os.Create("./log/trace.out")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	err = trace.Start(f)
+	if err != nil {
+		panic(err)
+	}
+	defer trace.Stop()
+	fmt.Println("gg")
+}
+
+// Struct1 同时赋值的struct，直接比较地址是不相同的
+// 若使用fmt.Printf("%p\n%p\n"后，猜测编译优化，值相等
+func Struct1() {
+	var a, b struct{}
+	print(&a, "\n", &b, "\n")
+	fmt.Printf("%p\n%p\n", &a, &b)
+	fmt.Println(&a == &b)
+}
+
+func Struct2() {
+	var c, d struct{}
+	fmt.Printf("%p\n%p\n", &c, &d)
+	print(&c, "\n", &c, "\n")
+	fmt.Println(&c == &d)
+}
+
+func Goroutine1() {
+	// c := make(chan os.Signal)
+	var wg sync.WaitGroup
+	start := time.Now()
+	defer func() {
+		fmt.Println("耗时:", time.Now().Sub(start).Seconds())
+	}()
+	for i := 1; i < 10000; i++ {
+		wg.Add(1)
+		go Goroutine1Attr1(&wg, i)
+	}
+	// signal.Notify(c, os.Interrupt)
+	// select {
+	// case <-c:
+	// 	fmt.Println("out")
+	// }
+	wg.Wait()
+
+}
+
+func Goroutine1Attr1(wg *sync.WaitGroup, id int) {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println(err)
+		}
+		wg.Done()
+	}()
+	get, err := http.Get("http://127.0.0.1:999/" + strconv.Itoa(id))
+	if err != nil {
+		panic(err)
+	}
+	defer get.Body.Close()
+	all, err := io.ReadAll(get.Body)
+	if err != nil {
+		panic(err)
+	}
+	u := struct {
+		Id   int    `json:"id"`
+		Name string `json:"name"`
+	}{}
+	err = json.Unmarshal(all, &u)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(u)
+}
+
+// Mul1To00 1到100乘
+func Mul1To00() {
+	var sum = big.NewInt(1)
+	// sum = sum.MulRange(1, 100)
+	// 93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000
+	// 93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000
+	for i := 1; i <= 100; i++ {
+		sum.Mul(sum, big.NewInt(int64(i)))
+		fmt.Println(i, sum)
+	}
 }
