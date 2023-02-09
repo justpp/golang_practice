@@ -1,0 +1,36 @@
+GET http://{{url}}/api/v1/tags
+Accept: application/json
+
+###
+
+POST http://{{url}}/api/v1/tags?trans=zh
+Content-Type: application/json
+
+{
+  "name": "lll",
+  "state": 1,
+  "created_by": "justpp"
+}
+
+###
+
+GET http://{{url}}/api/v1/tags/1
+Accept: application/json
+
+###
+
+DELETE http://{{url}}/api/v1/tags/2
+Accept: application/json
+
+###
+
+PUT http://{{url}}/api/v1/tags/1
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "gegegege",
+  "modified_by": "还是我"
+}
+
+###
