@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"giao/tour/blog/internal/model"
 	"giao/tour/blog/pkg/app"
 )
@@ -18,14 +19,14 @@ type ListTagRequest struct {
 type CreateTagRequest struct {
 	Name      string `form:"name" binding:"max=100"`
 	State     uint8  `form:"state,default=1" binding:"oneof=0 1"`
-	CreatedBy string `form:"created_by" binding:"required,min=2,max=100"`
+	CreatedBy string `json:"created_by" binding:"required,min=2,max=100"`
 }
 
 type UpdateTagRequest struct {
 	Id         uint32 `form:"id" binding:"required,gte=1"`
 	Name       string `form:"name" binding:"max=100"`
 	State      uint8  `form:"state,default=1" binding:"oneof=0 1"`
-	ModifiedBy string `form:"modified_by" binding:"required,min=2,max=100"`
+	ModifiedBy string `form:"modified_by"  json:"modified_by" binding:"required,min=2,max=100"`
 }
 
 type DelTagRequest struct {
@@ -38,6 +39,11 @@ func (s *Service) CountTag(param *CountTagRequest) (int, error) {
 
 func (s *Service) ListTag(param *ListTagRequest, pager *app.Pager) ([]*model.Tag, error) {
 	return s.dao.GetTagList(param.Name, param.State, pager.Page, pager.PageSize)
+}
+
+func (s *Service) TagById(id uint32) (*model.Tag, error) {
+	fmt.Println("service", id)
+	return s.dao.Find(id)
 }
 
 func (s *Service) CreateTag(param *CreateTagRequest) error {

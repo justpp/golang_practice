@@ -2,6 +2,7 @@ package main
 
 import (
 	"giao/tour/blog/global"
+	"giao/tour/blog/internal/middleware"
 	"giao/tour/blog/internal/model"
 	"giao/tour/blog/internal/routers"
 	"giao/tour/blog/pkg/logger"
@@ -30,6 +31,7 @@ func init() {
 func main() {
 	gin.SetMode(global.ServerSetting.RunMode)
 	router := routers.NewRouter()
+	router.Use(middleware.Translations())
 	r := &http.Server{
 		Addr:           ":" + global.ServerSetting.HttpPort,
 		Handler:        router,
