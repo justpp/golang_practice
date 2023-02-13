@@ -3,7 +3,7 @@ package v1
 import (
 	"giao/tour/blog/global"
 	"giao/tour/blog/pkg/app"
-	"giao/tour/blog/pkg/errorcode"
+	"giao/tour/blog/pkg/errcode"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,7 +15,7 @@ func NewArticle() Article {
 }
 
 func (a Article) List(c *gin.Context) {
-	app.NewResponse(c).ToErrorResponse(errorcode.ServerError)
+	app.NewResponse(c).ToErrorResponse(errcode.ServerError)
 	return
 }
 func (a Article) Get(c *gin.Context) {

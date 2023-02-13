@@ -30,7 +30,36 @@ Content-Type: application/json
 
 {
   "name": "gegegege",
-  "modified_by": "还是我"
+  "modified_by": "还是我",
+  "state": 0
 }
+
+###
+
+
+POST http://{{url}}/upload/file
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+Content-Type: application/json
+
+--WebAppBoundary
+Content-Disposition: form-data; name="type"
+Content-Type: application/json
+
+1
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="kn.jpg"
+Content-Type: multipart/form-data
+
+< C:\Users\shenhao\Pictures\kn.jpg
+
+--WebAppBoundary--
+
+{
+"type": 1
+}
+
+
+
+
 
 ###
