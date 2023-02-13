@@ -36,11 +36,17 @@ func (d *Dao) CreateTag(name string, state uint8, createBy string) error {
 
 func (d *Dao) UpdateTag(id uint32, name string, state uint8, modifiedBy string) error {
 	tag := model.Tag{
-		Name:  name,
-		State: state,
 		Model: &model.Model{ID: id, ModifiedBy: modifiedBy},
 	}
-	return tag.Update(d.engine)
+	// 通过结构体更新字段零值，gorm会无法区分是初始化的零值还是赋值的结果，这里采用map更新零值
+	values := map[string]interface{}{
+		"state":       state,
+		"modified_by": modifiedBy,
+	}
+	if name != "" {
+		values["name"] = name
+	}
+	return tag.Update(d.engine, values)
 }
 
 func (d *Dao) Del(id uint32) error {

@@ -1,8 +1,11 @@
 package routers
 
 import (
+	"giao/tour/blog/global"
+	"giao/tour/blog/internal/routers/api"
 	v1 "giao/tour/blog/internal/routers/api/v1"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 func NewRouter() *gin.Engine {
@@ -12,7 +15,9 @@ func NewRouter() *gin.Engine {
 
 	tag := v1.NewTag()
 	article := v1.NewArticle()
-
+	upload := api.NewUpload()
+	r.POST("/upload/file", upload.UploadFile)
+	r.StaticFS("/static", http.Dir(global.AppSetting.UploadSavePath))
 	apiV1 := r.Group("/api/v1")
 	{
 		apiV1.POST("/tags", tag.Create)

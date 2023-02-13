@@ -1,4 +1,4 @@
-package errorcode
+package errcode
 
 var (
 	ErrorGetTagListFail = NewError(20010001, "获取标签列表失败")
@@ -7,4 +7,5 @@ var (
 	ErrorDeleteTagFail  = NewError(20010004, "删除标签失败")
 	ErrorCountTagFail   = NewError(20010005, "统计标签失败")
 	ErrorGetTagFail     = NewError(20010006, "获取标签失败")
+	ErrorUploadFileFail = NewError(20030001, "上传文件失败")
 )
