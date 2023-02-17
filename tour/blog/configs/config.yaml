@@ -6,7 +6,7 @@ Server:
 App:
   DefaultPageSize: 10
   MaxPageSize: 100
-  LogSavePath: ./storage/logs
+  LogSavePath: storage/logs
   LogFileName: app
   LogFileExt: .log
 
@@ -28,3 +28,8 @@ Database:
   ParseTime: True
   MaxIdleConnects: 10
   MaxOpenConnects: 30
+
+JWT:
+  Secret: justpp
+  Issuer: justpp
+  Expire: 7200

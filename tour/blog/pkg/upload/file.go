@@ -83,7 +83,7 @@ func SaveFile(file *multipart.FileHeader, dst string) error {
 	}
 	defer src.Close()
 
-	out, err := os.Open(dst)
+	out, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
