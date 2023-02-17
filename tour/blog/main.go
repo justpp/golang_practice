@@ -1,13 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"giao/tour/blog/global"
 	"giao/tour/blog/internal/middleware"
 	"giao/tour/blog/internal/model"
 	"giao/tour/blog/internal/routers"
 	"giao/tour/blog/pkg/logger"
 	"giao/tour/blog/pkg/setting"
-	"giao/util"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"log"
@@ -39,6 +39,7 @@ func main() {
 		WriteTimeout:   global.ServerSetting.WriteTimeout,
 		MaxHeaderBytes: 1 << 20,
 	}
+	fmt.Println("start server:", r.Addr)
 	err := r.ListenAndServe()
 	if err != nil {
 		return
@@ -62,7 +63,11 @@ func setupSetting() error {
 	if err != nil {
 		return err
 	}
-
+	err = s.ReadSection("JWT", &global.JWTSetting)
+	if err != nil {
+		return err
+	}
+	global.JWTSetting.Expire *= time.Second
 	global.ServerSetting.ReadTimeout *= time.Second
 	global.ServerSetting.WriteTimeout *= time.Second
 	return nil
@@ -80,7 +85,8 @@ func setupDBEngine() error {
 }
 
 func setupLogger() {
-	fileName := util.GetCurrentAbPath() + global.AppSetting.LogSavePath + "/" + global.AppSetting.LogFileName + global.AppSetting.LogFileExt
+	fileName := global.AppSetting.LogSavePath + "/" + global.AppSetting.LogFileName + global.AppSetting.LogFileExt
+	fmt.Println("filename", fileName)
 	global.Logger = logger.NewLogger(&lumberjack.Logger{
 		Filename:  fileName,
 		MaxSize:   500,

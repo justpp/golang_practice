@@ -1,9 +1,23 @@
+
+POST http://{{url}}/auth
+Content-Type: application/json
+
+{
+  "app_key": "justpp",
+  "app_secret" : "tour\/blog"
+}
+
+###
+
+
 GET http://{{url}}/api/v1/tags
+token: {{token}}
 Accept: application/json
 
 ###
 
 POST http://{{url}}/api/v1/tags?trans=zh
+token: {{token}}
 Content-Type: application/json
 
 {
@@ -25,6 +39,7 @@ Accept: application/json
 ###
 
 PUT http://{{url}}/api/v1/tags/1
+token: {{token}}
 Accept: application/json
 Content-Type: application/json
 
@@ -53,13 +68,5 @@ Content-Type: multipart/form-data
 < C:\Users\shenhao\Pictures\kn.jpg
 
 --WebAppBoundary--
-
-{
-"type": 1
-}
-
-
-
-
 
 ###

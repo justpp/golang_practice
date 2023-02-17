@@ -2,6 +2,7 @@ package routers
 
 import (
 	"giao/tour/blog/global"
+	"giao/tour/blog/internal/middleware"
 	"giao/tour/blog/internal/routers/api"
 	v1 "giao/tour/blog/internal/routers/api/v1"
 	"github.com/gin-gonic/gin"
@@ -12,13 +13,16 @@ func NewRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
+	r.Use(middleware.AccessLog())
 
 	tag := v1.NewTag()
 	article := v1.NewArticle()
 	upload := api.NewUpload()
 	r.POST("/upload/file", upload.UploadFile)
 	r.StaticFS("/static", http.Dir(global.AppSetting.UploadSavePath))
+	r.POST("/auth", api.GetAuth)
 	apiV1 := r.Group("/api/v1")
+	apiV1.Use(middleware.JWT())
 	{
 		apiV1.POST("/tags", tag.Create)
 		apiV1.DELETE("/tags/:id", tag.Delete)
