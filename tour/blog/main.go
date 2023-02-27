@@ -42,6 +42,7 @@ func main() {
 	fmt.Println("start server:", r.Addr)
 	err := r.ListenAndServe()
 	if err != nil {
+		fmt.Println("fuck serve start err:", err)
 		return
 	}
 }
@@ -64,6 +65,10 @@ func setupSetting() error {
 		return err
 	}
 	err = s.ReadSection("JWT", &global.JWTSetting)
+	if err != nil {
+		return err
+	}
+	err = s.ReadSection("Email", &global.EmailSetting)
 	if err != nil {
 		return err
 	}

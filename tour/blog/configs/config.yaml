@@ -5,6 +5,7 @@ Server:
   WriteTimeout: 60
 App:
   DefaultPageSize: 10
+  DefaultContextTimeout: 60 # s
   MaxPageSize: 100
   LogSavePath: storage/logs
   LogFileName: app
@@ -33,3 +34,13 @@ JWT:
   Secret: justpp
   Issuer: justpp
   Expire: 7200
+
+Email:
+  Host: smtp.qq.com
+  Port: 465
+  UserName: xxxx@qq.com
+  Password: xxxxxxxx
+  IsSSL: true
+  From: xxxx@qq.com
+  To:
+    - xxxx@qq.com
