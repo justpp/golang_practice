@@ -5,15 +5,31 @@ import (
 	"giao/tour/blog/internal/middleware"
 	"giao/tour/blog/internal/routers/api"
 	v1 "giao/tour/blog/internal/routers/api/v1"
+	"giao/tour/blog/pkg/limiter"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"time"
 )
+
+var methodLimiter = limiter.NewMethodLimiter().AddBucket(limiter.BucketRule{
+	Key:          "/auth",
+	FillInternal: time.Second,
+	Capacity:     10,
+	Quantum:      10,
+})
 
 func NewRouter() *gin.Engine {
 	r := gin.New()
-	r.Use(gin.Logger())
-	r.Use(gin.Recovery())
-	r.Use(middleware.AccessLog())
+	if global.ServerSetting.RunMode == "debug" {
+		r.Use(gin.Logger())
+		r.Use(gin.Recovery())
+	} else {
+		r.Use(middleware.AccessLog())
+		r.Use(middleware.Recovery())
+	}
+	r.Use(middleware.ApiInfo())
+	r.Use(middleware.RateLimiter(methodLimiter))
+	r.Use(middleware.ContextTimeout(time.Second * global.AppSetting.DefaultContextTimeout))
 
 	tag := v1.NewTag()
 	article := v1.NewArticle()

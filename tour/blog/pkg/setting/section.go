@@ -1,27 +1,30 @@
 package setting
 
-import "time"
+import (
+	"time"
+)
 
-type ServerSettings struct {
+type ServerSettingS struct {
 	RunMode      string
 	HttpPort     string
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
 }
 
-type AppSettings struct {
-	DefaultPageSize      int
-	MaxPageSize          int
-	LogSavePath          string
-	LogFileName          string
-	LogFileExt           string
-	UploadSavePath       string
-	UploadServerUrl      string
-	UploadImageMaxSize   int
-	UploadImageAllowExts []string
+type AppSettingS struct {
+	DefaultPageSize       int
+	DefaultContextTimeout time.Duration
+	MaxPageSize           int
+	LogSavePath           string
+	LogFileName           string
+	LogFileExt            string
+	UploadSavePath        string
+	UploadServerUrl       string
+	UploadImageMaxSize    int
+	UploadImageAllowExts  []string
 }
 
-type DatabaseSettings struct {
+type DatabaseSettingS struct {
 	DBType          string
 	UserName        string
 	Password        string
@@ -46,4 +49,14 @@ type JWTSettingS struct {
 	Secret string
 	Issuer string
 	Expire time.Duration
+}
+
+type EmailSettingS struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+	IsSSL    bool
+	From     string
+	To       []string
 }
