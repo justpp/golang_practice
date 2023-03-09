@@ -17,3 +17,7 @@ giao.exe
 giao
 /tour/blog/tmp/
 /tour/blog/storage/
+tour/grpc-demo/vendor/
+
+*/go.sum
+*/vendor
