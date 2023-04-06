@@ -1,5 +1,5 @@
 
-POST http://{{url}}/auth
+GET http://{{url}}/auth
 Content-Type: application/json
 
 {
