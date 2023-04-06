@@ -1,11 +1,11 @@
 package routers
 
 import (
-	"giao/src/tour/blog/global"
-	"giao/src/tour/blog/internal/middleware"
-	"giao/src/tour/blog/internal/routers/api"
-	v1 "giao/src/tour/blog/internal/routers/api/v1"
-	"giao/src/tour/blog/pkg/limiter"
+	"giao/pkg/tour/blog/global"
+	"giao/pkg/tour/blog/internal/middleware"
+	"giao/pkg/tour/blog/internal/routers/api"
+	v1 "giao/pkg/tour/blog/internal/routers/api/v1"
+	"giao/pkg/tour/blog/pkg/limiter"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"

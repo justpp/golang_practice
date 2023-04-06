@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"bytes"
-	"giao/src/tour/blog/global"
-	"giao/src/tour/blog/pkg/logger"
+	"giao/pkg/tour/blog/global"
+	"giao/pkg/tour/blog/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"io"
 	"time"

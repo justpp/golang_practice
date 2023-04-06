@@ -2,7 +2,7 @@ package day_doc
 
 import (
 	"fmt"
-	"giao/util"
+	"giao/pkg/util"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -63,7 +63,7 @@ func (d *DayDoc) regUrls() {
 		d.cssJsUrls = append(d.cssJsUrls, string(match[1]))
 	}
 	// js链接
-	compile = regexp.MustCompile(`<script.+?\s*src="(/static/.+?)"[^>]*>`)
+	compile = regexp.MustCompile(`<script.+?\s*pkg="(/static/.+?)"[^>]*>`)
 	matches = compile.FindAllSubmatch(body, -1)
 	for _, match := range matches {
 		d.cssJsUrls = append(d.cssJsUrls, string(match[1]))
