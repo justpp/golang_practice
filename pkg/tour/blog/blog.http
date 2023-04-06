@@ -1,0 +1,72 @@
+
+GET http://{{url}}/auth
+Content-Type: application/json
+
+{
+  "app_key": "justpp",
+  "app_secret" : "tour\/blog"
+}
+
+###
+
+
+GET http://{{url}}/api/v1/tags
+token: {{token}}
+Accept: application/json
+
+###
+
+POST http://{{url}}/api/v1/tags?trans=zh
+token: {{token}}
+Content-Type: application/json
+
+{
+  "name": "lll",
+  "state": 1,
+  "created_by": "justpp"
+}
+
+###
+
+GET http://{{url}}/api/v1/tags/1
+Accept: application/json
+
+###
+
+DELETE http://{{url}}/api/v1/tags/2
+Accept: application/json
+
+###
+
+PUT http://{{url}}/api/v1/tags/1
+token: {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "gegegege",
+  "modified_by": "还是我",
+  "state": 0
+}
+
+###
+
+
+POST http://{{url}}/upload/file
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+Content-Type: application/json
+
+--WebAppBoundary
+Content-Disposition: form-data; name="type"
+Content-Type: application/json
+
+1
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="kn.jpg"
+Content-Type: multipart/form-data
+
+< C:\Users\shenhao\Pictures\kn.jpg
+
+--WebAppBoundary--
+
+###

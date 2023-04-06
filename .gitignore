@@ -21,3 +21,4 @@ tour/grpc-demo/vendor/
 
 */go.sum
 */vendor
+/**/**/vendor/
