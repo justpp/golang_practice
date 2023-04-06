@@ -36,7 +36,7 @@ func NewRouter() *gin.Engine {
 	upload := api.NewUpload()
 	r.POST("/upload/file", upload.UploadFile)
 	r.StaticFS("/static", http.Dir(global.AppSetting.UploadSavePath))
-	r.POST("/auth", api.GetAuth)
+	r.GET("/auth", api.GetAuth)
 	apiV1 := r.Group("/api/v1")
 	apiV1.Use(middleware.JWT())
 	{

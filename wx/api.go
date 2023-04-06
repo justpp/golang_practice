@@ -1,12 +1,17 @@
-package wx
+package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"encoding/xml"
+	"fmt"
+	"giao/wx/gpt"
 	"github.com/gin-gonic/gin"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 type accessTokenRespT struct {
@@ -51,8 +56,28 @@ func CheckSignature(c *gin.Context) {
 	_, _ = c.Writer.WriteString(echostr)
 }
 
+type WxReqXml struct {
+	ToUserName   string `xml:"ToUserName"`
+	FromUserName string `xml:"FromUserName"`
+	CreateTime   int64  `xml:"CreateTime"`
+	MsgType      string `xml:"MsgType"`
+	Content      string `xml:"Content"`
+	MsgId        int64  `xml:"MsgId"`
+}
+
+func ReceiveMsg(c *gin.Context) {
+	var wxMsg WxReqXml
+	err := c.ShouldBindXML(&wxMsg)
+	if err != nil {
+		return
+	}
+	fmt.Println("raw data", wxMsg)
+	answer := gpt.Talk(talkSecret, wxMsg.FromUserName, wxMsg.Content)
+	WXMsgReply(c, wxMsg.ToUserName, wxMsg.FromUserName, answer)
+}
+
 func fetchCode(c *gin.Context) {
-	RedirectUri := url.QueryEscape("http://152.69.198.203/get_userinfo")
+	RedirectUri := url.QueryEscape("http://168.138.33.211:8892/get_userinfo")
 	oauthUrl := "https://open.weixin.qq.com/connect/oauth2/authorize" +
 		"?appid=" + appId +
 		"&redirect_uri=" + RedirectUri +
@@ -64,7 +89,7 @@ func fetchCode(c *gin.Context) {
 	c.Redirect(http.StatusFound, oauthUrl)
 }
 
-func fetchAccessToken(code string) *accessTokenRespT {
+func fetchUserAccessToken(code string) *accessTokenRespT {
 	apiUrl := "https://api.weixin.qq.com/sns/oauth2/access_token" +
 		"?appid=" + appId +
 		"&secret=" + appSecret +
@@ -77,6 +102,28 @@ func fetchAccessToken(code string) *accessTokenRespT {
 		return nil
 	}
 	log.Println("code", code)
+
+	content, _ := io.ReadAll(resp.Body)
+	var respT accessTokenRespT
+	json.Unmarshal(content, &respT)
+	if respT.Errcode != 0 {
+		log.Println("fetch err", respT.Errcode, respT.Errmsg)
+		return nil
+	}
+	return &respT
+}
+
+func fetchAccessToken() *accessTokenRespT {
+	apiUrl := "https://api.weixin.qq.com/cgi-bin/token" +
+		"?appid=" + appId +
+		"&secret=" + appSecret +
+		"&grant_type=client_credential"
+	resp, err := http.Get(apiUrl)
+	defer resp.Body.Close()
+	if err != nil {
+		log.Println("fetchAccessToken err", err)
+		return nil
+	}
 
 	content, _ := io.ReadAll(resp.Body)
 	var respT accessTokenRespT
@@ -115,8 +162,8 @@ func fetUserInfo(accessToken, openid string) *UserInfoResT {
 
 func getUserInfo(c *gin.Context) {
 	code := c.Query("code")
-	//state := c.Query("state")
-	accessTokenT := fetchAccessToken(code)
+	// state := c.Query("state")
+	accessTokenT := fetchUserAccessToken(code)
 	log.Println("accessTokenT", accessTokenT)
 	userInfo = fetUserInfo(accessTokenT.AccessToken, accessTokenT.Openid)
 	if userInfo.Errcode != 0 {
@@ -128,4 +175,90 @@ func getUserInfo(c *gin.Context) {
 		"userInfo": userInfo,
 		"title":    "啦啦啦说了.",
 	})
+}
+
+type Button struct {
+	Type     string   `json:"type"`
+	Name     string   `json:"name"`
+	Key      string   `json:"key,omitempty"`
+	Url      string   `json:"url,omitempty"`
+	AppID    string   `json:"appid,omitempty"`
+	PagePath string   `json:"pagepath,omitempty"`
+	SubBtn   []Button `json:"sub_button,omitempty"`
+}
+
+type Menu struct {
+	Button []Button `json:"button"`
+}
+
+func setMenu(c *gin.Context) {
+	accessToken := fetchAccessToken()
+	menuBtnMap := Menu{
+		Button: []Button{
+			{Type: "click", Name: "欸嘿", Key: "V1001_TODAY_MUSIC"},
+			{Name: "菜单", SubBtn: []Button{
+				{Type: "view", Name: "搜索", Url: "http://www.soso.com/"},
+				{Type: "scancode_waitmsg", Name: "扫码带提示", Key: "rselfmenu_0_0", SubBtn: []Button{}},
+				{Type: "scancode_push", Name: "扫码推事件", Key: "rselfmenu_0_1", SubBtn: []Button{}}},
+			},
+		},
+	}
+	menu, _ := json.Marshal(menuBtnMap)
+
+	apiUrl := "https://api.weixin.qq.com/cgi-bin/menu/create?access_token=" + accessToken.AccessToken
+	resp, err := http.Post(apiUrl, "application/json", bytes.NewBuffer(menu))
+	defer resp.Body.Close()
+	if err != nil {
+		log.Println("create menu err", err)
+		return
+	}
+
+	content, _ := io.ReadAll(resp.Body)
+	fmt.Println("content", string(content))
+	return
+}
+
+func delMenu(c *gin.Context) {
+	accessToken := fetchAccessToken()
+
+	apiUrl := "https://api.weixin.qq.com/cgi-bin/menu/delete?access_token=" + accessToken.AccessToken
+	resp, err := http.Get(apiUrl)
+	defer resp.Body.Close()
+	if err != nil {
+		log.Println("del menu fail err", err)
+		return
+	}
+
+	content, _ := io.ReadAll(resp.Body)
+	fmt.Println("content", string(content))
+	return
+}
+
+// WXRepTextMsg 微信回复文本消息结构体
+type WXRepTextMsg struct {
+	ToUserName   string
+	FromUserName string
+	CreateTime   int64
+	MsgType      string
+	Content      string
+	// 若不标记XMLName, 则解析后的xml名为该结构体的名称
+	XMLName xml.Name `xml:"xml"`
+}
+
+// WXMsgReply 微信消息回复
+func WXMsgReply(c *gin.Context, fromUser, toUser string, resText string) {
+	repTextMsg := WXRepTextMsg{
+		ToUserName:   toUser,
+		FromUserName: fromUser,
+		CreateTime:   time.Now().Unix(),
+		MsgType:      "text",
+		Content:      resText,
+	}
+
+	msg, err := xml.Marshal(&repTextMsg)
+	if err != nil {
+		log.Printf("[消息回复] - 将对象进行XML编码出错: %v\n", err)
+		return
+	}
+	_, _ = c.Writer.Write(msg)
 }
