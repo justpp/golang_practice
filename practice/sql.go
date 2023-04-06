@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"giao/util"
+	"giao/pkg/util"
 	_ "github.com/go-sql-driver/mysql"
 	"time"
 )

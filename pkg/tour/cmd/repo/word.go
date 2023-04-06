@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"giao/src/tour/cmd/internal/word"
+	"giao/pkg/tour/cmd/internal/word"
 	"github.com/spf13/cobra"
 	"log"
 	"strings"

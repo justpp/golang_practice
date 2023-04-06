@@ -3,7 +3,7 @@ package practice
 import (
 	"encoding/base64"
 	"fmt"
-	"giao/util"
+	"giao/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/prometheus/common/log"
 	"github.com/qianlnk/pgbar"
@@ -64,7 +64,7 @@ func OMADownloadPractice() {
 			b := make([]byte, 1024)
 			bs := make([]byte, 16)
 			currentIndex, _ := storageFile.ReadAt(bs, current*16)
-			//取出所有整数
+			// 取出所有整数
 			reg := regexp.MustCompile(`\d+`)
 			countStr := reg.FindString(string(bs[:currentIndex]))
 			total, _ := strconv.ParseInt(countStr, 10, 0)
@@ -74,13 +74,13 @@ func OMADownloadPractice() {
 					wg.Done()
 					break
 				}
-				//从指定位置开始读
+				// 从指定位置开始读
 				n, err := downloadFile.ReadAt(b, current*perG+total)
 				if err == io.EOF {
 					wg.Done()
 					break
 				}
-				//从指定位置开始写
+				// 从指定位置开始写
 				copyFile.WriteAt(b, current*perG+total)
 				storageFile.WriteAt([]byte(strconv.FormatInt(total, 10)+" "), current*16)
 				total += int64(n)

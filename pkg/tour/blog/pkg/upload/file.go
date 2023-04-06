@@ -1,8 +1,8 @@
 package upload
 
 import (
-	"giao/src/tour/blog/global"
-	"giao/src/tour/blog/pkg/util"
+	"giao/pkg/tour/blog/global"
+	"giao/pkg/tour/blog/pkg/util"
 	"io"
 	"mime/multipart"
 	"os"
