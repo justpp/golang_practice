@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"giao/pkg/util"
 	"github.com/sashabaranov/go-openai"
 	"os"
 	"strings"
@@ -11,7 +12,9 @@ import (
 
 // $env:HTTPS_PROXY="http://127.0.0.1:10809"
 func main() {
-	client := openai.NewClient("sk-")
+	env := util.NewEnv()
+	token := env.Get("talkSecret")
+	client := openai.NewClient(token.(string))
 	messages := make([]openai.ChatCompletionMessage, 0)
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Conversation")
