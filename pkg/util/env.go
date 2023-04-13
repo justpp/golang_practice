@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"github.com/spf13/viper"
 )
 
@@ -40,6 +41,7 @@ func NewEnv(opts ...EnvOpsFunc) *viper.Viper {
 	vp.SetConfigType(y.envType)
 	err := vp.ReadInConfig()
 	if err != nil {
+		fmt.Println("配置读取失败 err", err)
 		return nil
 	}
 	return vp
