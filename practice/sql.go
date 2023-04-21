@@ -11,10 +11,6 @@ import (
 
 var db *sql.DB
 
-func init() {
-	db = NewDB()
-}
-
 func NewDB() *sql.DB {
 	fmt.Println("connecting db")
 	db, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3308)/vpea_erp_local")
@@ -30,6 +26,7 @@ func NewDB() *sql.DB {
 		return nil
 	}
 	fmt.Println("connect success")
+	db = NewDB()
 	return db
 }
 
