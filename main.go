@@ -1,9 +1,7 @@
 package main
 
-import (
-	"fmt"
-)
+import "giao/practice"
 
 func main() {
-	fmt.Println("gugu")
+	practice.BFS()
 }
