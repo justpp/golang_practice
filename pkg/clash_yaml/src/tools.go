@@ -3,14 +3,17 @@ package src
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"giao/pkg/util"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
+	"os"
 	"strings"
 )
 
 type V2Vmess struct {
 	V    string `json:"v"`
-	Ps   string `json:"ps"`
+	Ps   []byte `json:"ps"`
 	Add  string `json:"add"`
 	Port string `json:"port"`
 	Id   string `json:"id"`
@@ -39,7 +42,7 @@ type V2Vmess struct {
 // }
 
 type ClashVmess struct {
-	Name           string `json:"name" yaml:"name"`
+	Name           []byte `json:"name" yaml:"name"`
 	Type           string `json:"type" yaml:"type"`
 	Server         string `json:"server" yaml:"server"`
 	Port           string `json:"port" yaml:"port"`
@@ -53,7 +56,7 @@ type ClashVmess struct {
 
 func Vmess2Clash(vmessStr string, tName string) {
 	split := strings.Split(strings.TrimSpace(vmessStr), "\n")
-	var vmessNameS []string
+	var vmessNameS [][]byte
 	var vssS []*ClashVmess
 	for _, s := range split {
 		clashT := v2EncodeClashT(s)
@@ -61,24 +64,32 @@ func Vmess2Clash(vmessStr string, tName string) {
 		vssS = append(vssS, clashT)
 	}
 
-	var proxies []map[string][]string
+	// var proxies []map[string][][]byte
 
 	config := GetTempConfig("")
-	err := config.UnmarshalKey("proxy-groups", &proxies)
-	util.CheckErr(err)
-
-	for i, proxy := range proxies {
-		proxiesItem := proxy["proxies"]
-
-		i2 := append(proxiesItem, vmessNameS...)
-
-		proxies[i]["proxies"] = i2
-
-	}
-
-	config.Set("proxies", vssS)
+	// err := config.UnmarshalKey("proxy-groups", &proxies)
+	// util.CheckErr(err)
+	//
+	// for i, proxy := range proxies {
+	// 	proxiesItem := proxy["proxies"]
+	//
+	// 	i2 := append(proxiesItem, vmessNameS...)
+	//
+	// 	proxies[i]["proxies"] = i2
+	//
+	// }
+	//
+	// config.Set("proxies", vssS)
 	// config.Set("proxy-groups", proxies)
-	err = config.WriteConfigAs("own.yaml")
+	fmt.Println(config.AllSettings())
+	marshal, err := yaml.Marshal(config.AllSettings())
+
+	if err != nil {
+		util.CheckErr(err)
+		return
+	}
+	err = os.WriteFile("own.yaml", marshal, 0644)
+	// err = config.WriteConfigAs("own.yaml")
 	util.CheckErr(err)
 
 }
