@@ -1,6 +1,7 @@
 .idea/
 *.exe
 *.txt
+*.yaml
 /log/
 go.sum
 /qr_code.png

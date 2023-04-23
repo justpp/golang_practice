@@ -46,6 +46,7 @@ func BFS() {
 	fmt.Println(bfs(graph, "start", "end"))
 
 }
+
 func bfs(graph map[string][]string, start, end string) []string {
 	l := list.New()
 	l.PushBack([]string{start})
@@ -69,4 +70,82 @@ func bfs(graph map[string][]string, start, end string) []string {
 		}
 	}
 	return nil
+}
+
+type state struct {
+	wolf    int
+	goat    int
+	cabbage int
+}
+
+func (s state) isValid() bool {
+	if s.wolf == s.goat && s.goat != s.cabbage {
+		return false
+	}
+	if s.goat == s.cabbage && s.goat != s.wolf {
+		return false
+	}
+	return true
+}
+
+func (s state) isFinal() bool {
+	return s.wolf == 0 && s.goat == 0 && s.cabbage == 0
+}
+
+func bfsWolfSheep(start state) bool {
+	visited := make(map[state]bool)
+	queue := list.New()
+	queue.PushBack(start)
+	visited[start] = true
+
+	for queue.Len() > 0 {
+		curr := queue.Front().Value.(state)
+		queue.Remove(queue.Front())
+
+		fmt.Println(curr)
+		if curr.isFinal() {
+			return true
+		}
+
+		for _, next := range getNextStates(curr) {
+			if !visited[next] {
+				visited[next] = true
+				queue.PushBack(next)
+			}
+		}
+	}
+
+	return false
+}
+
+func getNextStates(s state) []state {
+	var next []state
+
+	// wolf crosses alone
+	if s.wolf == 1 {
+		next = append(next, state{s.wolf - 1, s.goat, s.cabbage})
+	} else {
+		next = append(next, state{s.wolf + 1, s.goat, s.cabbage})
+	}
+
+	// goat crosses alone
+	if s.goat == 1 {
+		next = append(next, state{s.wolf, s.goat - 1, s.cabbage})
+	} else {
+		next = append(next, state{s.wolf, s.goat + 1, s.cabbage})
+	}
+
+	// cabbage crosses alone
+	if s.cabbage == 1 {
+		next = append(next, state{s.wolf, s.goat, s.cabbage - 1})
+	} else {
+		next = append(next, state{s.wolf, s.goat, s.cabbage + 1})
+	}
+
+	return next
+}
+
+func BfsWolfSheep() {
+	start := state{1, 1, 1}
+	fmt.Println(bfsWolfSheep(start))
 }
