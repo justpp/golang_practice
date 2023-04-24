@@ -3,6 +3,7 @@ package practice
 import (
 	"container/list"
 	"fmt"
+	"giao/pkg/util"
 )
 
 // DfsAll dfs 全排 给定一个不含重复数字的数组 nums ，返回其 所有可能的全排列 。你可以 按任意顺序 返回答案。
@@ -62,8 +63,8 @@ func bfs(graph map[string][]string, start, end string) []string {
 		for _, s := range graph[node] {
 			if _, ok := visited[s]; !ok {
 				visited[s] = struct{}{}
-				var newPath []string
-				newPath = append(newPath, path...)
+				newPath := make([]string, len(path))
+				copy(newPath, path)
 				newPath = append(newPath, s)
 				l.PushBack(newPath)
 			}
@@ -76,76 +77,108 @@ type state struct {
 	wolf    int
 	goat    int
 	cabbage int
+	human   int
 }
 
 func (s state) isValid() bool {
-	if s.wolf == s.goat && s.goat != s.cabbage {
+
+	// 狼羊同岸 且农夫不在
+	if s.wolf == s.goat && s.goat != s.human {
 		return false
 	}
-	if s.goat == s.cabbage && s.goat != s.wolf {
+
+	if s.goat == s.cabbage && s.cabbage != s.human {
 		return false
 	}
 	return true
 }
 
 func (s state) isFinal() bool {
-	return s.wolf == 0 && s.goat == 0 && s.cabbage == 0
+	return s.human == 0 && util.ArrCompare([]int{
+		s.wolf,
+		s.goat,
+		s.cabbage,
+		s.human,
+	})
+
 }
 
-func bfsWolfSheep(start state) bool {
+func bfsWolfSheep(start state) []state {
 	visited := make(map[state]bool)
 	queue := list.New()
-	queue.PushBack(start)
+	queue.PushBack([]state{start})
 	visited[start] = true
 
-	for queue.Len() > 0 {
-		curr := queue.Front().Value.(state)
-		queue.Remove(queue.Front())
+	times := 0
 
-		fmt.Println(curr)
-		if curr.isFinal() {
-			return true
+	for queue.Len() > 0 {
+		curr := queue.Front().Value.([]state)
+		queue.Remove(queue.Front())
+		times++
+
+		lastStep := curr[len(curr)-1]
+		if lastStep.isFinal() {
+			return curr
 		}
 
-		for _, next := range getNextStates(curr) {
-			if !visited[next] {
+		for _, next := range getNextStates(lastStep) {
+			if !visited[next] && next.isValid() {
 				visited[next] = true
-				queue.PushBack(next)
+
+				// 记录多种可能的路线
+				curr = append(curr, next)
+				queue.PushBack(curr)
 			}
 		}
 	}
-
-	return false
+	return nil
 }
 
 func getNextStates(s state) []state {
+
+	human := s.human
+	if s.human == 1 {
+		human = 0
+	} else {
+		human = 1
+	}
 	var next []state
 
+	// human 往返
+	next = append(next, state{s.wolf, s.goat, s.cabbage, human})
+
 	// wolf crosses alone
-	if s.wolf == 1 {
-		next = append(next, state{s.wolf - 1, s.goat, s.cabbage})
-	} else {
-		next = append(next, state{s.wolf + 1, s.goat, s.cabbage})
+	if s.human == s.wolf {
+		if s.wolf == 1 {
+			next = append(next, state{s.wolf - 1, s.goat, s.cabbage, human})
+		} else {
+			next = append(next, state{s.wolf + 1, s.goat, s.cabbage, human})
+		}
 	}
 
 	// goat crosses alone
-	if s.goat == 1 {
-		next = append(next, state{s.wolf, s.goat - 1, s.cabbage})
-	} else {
-		next = append(next, state{s.wolf, s.goat + 1, s.cabbage})
+	if s.human == s.goat {
+		if s.goat == 1 {
+			next = append(next, state{s.wolf, s.goat - 1, s.cabbage, human})
+		} else {
+			next = append(next, state{s.wolf, s.goat + 1, s.cabbage, human})
+		}
 	}
 
 	// cabbage crosses alone
-	if s.cabbage == 1 {
-		next = append(next, state{s.wolf, s.goat, s.cabbage - 1})
-	} else {
-		next = append(next, state{s.wolf, s.goat, s.cabbage + 1})
+	if s.human == s.cabbage {
+		if s.cabbage == 1 {
+			next = append(next, state{s.wolf, s.goat, s.cabbage - 1, human})
+		} else {
+			next = append(next, state{s.wolf, s.goat, s.cabbage + 1, human})
+		}
 	}
 
+	fmt.Println("curr", s, "next", next)
 	return next
 }
 
 func BfsWolfSheep() {
-	start := state{1, 1, 1}
+	start := state{1, 1, 1, 1}
 	fmt.Println(bfsWolfSheep(start))
 }
