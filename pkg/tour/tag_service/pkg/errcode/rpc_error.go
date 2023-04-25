@@ -1,6 +1,7 @@
 package errcode
 
 import (
+	"giao/src/tour/tag_service/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -32,6 +33,20 @@ func ToRPCCode(code int) codes.Code {
 }
 
 func ToRPCError(err *Error) error {
-	s := status.New(ToRPCCode(err.code), err.msg)
+	s, _ := status.New(ToRPCCode(err.Code()), err.msg).WithDetails(&proto.Error{Code: int32(err.Code()), Message: err.Msg()})
 	return s.Err()
+}
+
+type Status struct {
+	*status.Status
+}
+
+func FromError(err error) *Status {
+	s, _ := status.FromError(err)
+	return &Status{s}
+}
+
+func ToRPCStatus(code int, msg string) *Status {
+	details, _ := status.New(ToRPCCode(code), msg).WithDetails(&proto.Error{Code: int32(code), Message: msg})
+	return &Status{details}
 }

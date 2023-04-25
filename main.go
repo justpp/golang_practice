@@ -1,7 +1,9 @@
 package main
 
-import "giao/practice"
+import (
+	"fmt"
+)
 
 func main() {
-	practice.BfsWolfSheep()
+	fmt.Println("gugu")
 }

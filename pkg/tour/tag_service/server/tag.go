@@ -16,10 +16,10 @@ type TagServer struct {
 }
 
 func (s *TagServer) GetTagList(ctx context.Context, r *proto.GetTagListRequest) (*proto.GetTagListReply, error) {
-	api := pkg.NewAPI("http://127.0.0.1:9999")
+	api := pkg.NewAPI(pkg.Target)
 	list, err := api.GetTagList(ctx, r.GetName())
 	if err != nil {
-		return nil, err
+		return nil, errcode.ToRPCError(errcode.ErrorTagListFail)
 	}
 	tagList := proto.GetTagListReply{}
 	err = json.Unmarshal(list, &tagList)

@@ -11,6 +11,7 @@ import (
 const (
 	API_KEY    = "justpp"
 	API_SECRET = "tour/blog"
+	Target     = "http://127.0.0.1:9999"
 )
 
 type AccessToken struct {
