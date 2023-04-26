@@ -1,13 +1,14 @@
 package main
 
 import (
-	"giao/src/tour/tag_service/run_server"
+	"giao/pkg/tour/tag_service/run_server"
 	"log"
+	"net/http"
 )
 
 func main() {
 	err := run_server.RunServer("9991")
-	if err != nil {
-		log.Fatalf("err:%s", err)
+	if err != nil && err != http.ErrServerClosed {
+		log.Fatalf("run_server err: %s", err)
 	}
 }
