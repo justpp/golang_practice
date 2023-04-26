@@ -1,8 +1,8 @@
 package run_server
 
 import (
-	"giao/src/tour/tag_service/proto"
-	"giao/src/tour/tag_service/server"
+	"giao/pkg/tour/tag_service/proto"
+	"giao/pkg/tour/tag_service/server"
 	"github.com/soheilhy/cmux"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"

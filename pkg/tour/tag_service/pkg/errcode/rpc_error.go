@@ -1,7 +1,7 @@
 package errcode
 
 import (
-	"giao/src/tour/tag_service/proto"
+	"giao/pkg/tour/tag_service/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

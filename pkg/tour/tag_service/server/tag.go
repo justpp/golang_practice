@@ -3,9 +3,9 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"giao/src/tour/tag_service/pkg"
-	"giao/src/tour/tag_service/pkg/errcode"
-	"giao/src/tour/tag_service/proto"
+	"giao/pkg/tour/tag_service/pkg"
+	"giao/pkg/tour/tag_service/pkg/errcode"
+	"giao/pkg/tour/tag_service/proto"
 )
 
 func NewTagServe() *TagServer {
