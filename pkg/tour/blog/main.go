@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"log"
+	"net"
 	"net/http"
 	"time"
 )
@@ -39,8 +40,12 @@ func main() {
 		WriteTimeout:   global.ServerSetting.WriteTimeout,
 		MaxHeaderBytes: 1 << 20,
 	}
+	l, err := net.Listen("tcp4", r.Addr)
+	if err != nil {
+		return
+	}
 	fmt.Println("start server:", r.Addr)
-	err := r.ListenAndServe()
+	err = r.Serve(l)
 	if err != nil {
 		fmt.Println("fuck serve start err:", err)
 		return
