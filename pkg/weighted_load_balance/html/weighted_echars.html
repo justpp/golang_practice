@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+<head>
+    <meta charset="UTF-8">
+    <title>weighted</title>
+</head>
+<style>
+	#main,
+	html,
+	body {
+		width: 100%;
+	}
+
+	#main {
+		height: 100%;
+	}
+</style>
+<body style="height: 100%; margin: 0">
+<div id="main" style="height: 100%"></div>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js"></script>
+
+</body>
+<script>
+  const chartDom = document.getElementById('main')
+  const myChart = echarts.init(chartDom,'dark', {
+    renderer: 'canvas',
+      useDirtyRect: false
+  })
+
+  let params = {
+    list: [],
+    data: []
+  }
+  let option = {
+    legend:{},
+    tooltip: {
+      trigger: 'item',
+      formatter: '{a} <br/>{b} : {c} ({d}%)'
+    },
+    dataset:{
+      source:[
+
+      ]
+    },
+    xAxis: { type: 'category' },
+    yAxis: { gridIndex: 0 },
+    grid: { top: '55%' },
+    toolbox: {
+      show: true,
+      feature: {
+        mark: { show: true },
+        dataView: { show: true, readOnly: false },
+        restore: { show: true }
+        // saveAsImage: { show: true }
+      }
+    },
+    series: [
+      {
+        id: 'pie',
+        type: 'pie',
+        radius: '30%',
+        center: ['50%', '25%'],
+        // roseType: 'area',
+        emphasis: {
+          focus: 'self'
+        },
+        label: {
+          formatter: '{b}: ({d}%)'
+        },
+        itemStyle: {
+          borderRadius: 5
+        }
+      }
+    ]
+  }
+
+  option && myChart.setOption(option)
+
+  function autoChange () {
+    const xhr = new XMLHttpRequest()
+    const url = '/c/data'
+    xhr.open('GET', url,false)
+    xhr.setRequestHeader('content-type', 'application/json')
+    xhr.onreadystatechange = (e) => {
+      if (e.target.readyState === 4 && e.target.status === 200) {
+        const data =  JSON.parse(e.target.responseText)
+
+
+        if (option.dataset.source.length === 0){
+          data.forEach(item=>{
+            option.series.push({
+              type: 'line',
+              smooth: true,
+              seriesLayoutBy: 'row',
+              emphasis: { focus: 'series' }
+            })
+            option.dataset.source.push([item.name,item.value])
+          })
+        } else {
+          data.forEach((item,key)=>{
+            option.dataset.source[key].push(item.value)
+            if ( option.dataset.source[key].length > 60){
+              option.dataset.source[key].splice(1,1)
+            }
+            console.log('option.dataset.source[key]',option.dataset.source[key].length)
+          })
+        }
+        option.series[0].data = data.filter(item => item.name !=='time_line')
+
+        myChart.setOption(option)
+      }
+    }
+    xhr.send()
+  }
+
+  setInterval(() => {
+    autoChange()
+  }, 1000)
+
+  window.addEventListener('resize', function () {
+    myChart.resize()
+  })
+</script>
+</html>

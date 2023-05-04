@@ -1,10 +1,16 @@
 package src
 
+import (
+	"fmt"
+	"time"
+)
+
 type WeightNode struct {
 	addr            string
 	weight          int // 权重
 	currentWeight   int // 当前权重
 	effectiveWeight int // 有效权重
+	times           int
 }
 
 type WeightRoundBalance struct {
@@ -46,6 +52,7 @@ func (w *WeightRoundBalance) Next() string {
 
 		// 选择最大当前权重
 		if best == nil || best.currentWeight < r.currentWeight {
+			w.curIndex = i
 			best = r
 		}
 	}
@@ -54,10 +61,27 @@ func (w *WeightRoundBalance) Next() string {
 	}
 	// 变更当前权重 = 当前权重 - 有效权重之和
 	best.currentWeight -= total
-
+	best.times++
 	return best.addr
 }
 
 func (w *WeightRoundBalance) Get() string {
 	return w.Next()
+}
+
+func (w *WeightRoundBalance) GetCharsData() []map[string]interface{} {
+	var charsData = []map[string]interface{}{
+		{
+			"name":  "time_line",
+			"value": time.Now().Format("2006-01-02 15:04:05"),
+		},
+	}
+	for _, rss := range w.rss {
+		item := map[string]interface{}{
+			"name":  fmt.Sprintf("%s (%v)", rss.addr, rss.weight),
+			"value": rss.currentWeight,
+		}
+		charsData = append(charsData, item)
+	}
+	return charsData
 }
