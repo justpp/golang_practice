@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	// url := "https://wap.x33xs.com/33xs/392/392417/"
+	// url := "https://m2.ddyueshu.com/wapbook/11082821.html"
 	// var tool src.EBook
 	// tool.Run(url)
 

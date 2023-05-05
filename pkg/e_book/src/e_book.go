@@ -3,10 +3,12 @@ package src
 import (
 	"fmt"
 	"giao/pkg/util"
+	"giao/pkg/util/custom_http"
 	"github.com/PuerkitoBio/goquery"
-	"net/http"
+	"golang.org/x/net/html/charset"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -52,29 +54,33 @@ func (e *EBook) FetchMenuList(EbookUrl string) {
 		e.fetchMenu()
 	}
 	fmt.Println("章节：", e.linkCount)
-
 }
 
 func (e *EBook) fetchMenu() {
-	res, _ := http.Get(e.nextUrl)
-	e.nextUrl = ""
-	defer res.Body.Close()
+	body := custom_http.Fetch(e.nextUrl, nil)
+	defer body.Close()
 
-	reader, err := goquery.NewDocumentFromReader(res.Body)
+	utf8, err := charset.NewReader(body, "UTF-8")
 	util.CheckErr(err)
+	e.nextUrl = ""
+
+	reader, err := goquery.NewDocumentFromReader(utf8)
+	util.CheckErr(err)
+
+	if e.name == "" {
+		bookName, _ := reader.Find("meta[property=\"og:novel:book_name\"]").Attr("content")
+		e.name = bookName
+	}
 
 	nextPage, _ := reader.Find(".listpage .right>a.onclick").Attr("href")
 	if nextPage != "" {
 		e.nextUrl = e.host + nextPage
 	}
-	fmt.Println(nextPage)
-	chapterList := reader.Find(".intro_info + .intro + .chapter + .intro + .chapter")
-	if chapterList.Text() == "" {
-		chapterList = reader.Find(".intro_info + .intro + .chapter")
-	}
-	chapterList.Find("li").Each(func(i int, selection *goquery.Selection) {
-		href, _ := selection.Find("a").Attr("href")
-		title, _ := selection.Find("a").Html()
+
+	chapterList := reader.Find(".book_last").Last()
+	chapterList.Find("a").Each(func(i int, selection *goquery.Selection) {
+		href, _ := selection.Attr("href")
+		title, _ := selection.Html()
 		e.linkCount += 1
 		count := e.linkCount
 		e.menuMap[count] = &chapter{
@@ -94,7 +100,8 @@ func (e *EBook) download() {
 	for i := 0; i < e.linkCount+1; i++ {
 		c, ok := e.menuMap[i]
 		if ok {
-			content = content + "\n\n" + c.title + "\n\n" + c.content
+			// content = content + "\n\n" + c.title + "\n\n" + c.content
+			content = content + "\n\n" + "\n\n" + c.content
 		}
 	}
 
@@ -136,16 +143,30 @@ func (e *EBook) fetchContent(c *chapter) {
 }
 
 func (c *chapter) fetchPage(e *EBook) {
-	res, _ := http.Get(c.nextUrl)
-	defer res.Body.Close()
-	reader, err := goquery.NewDocumentFromReader(res.Body)
+	body := custom_http.Fetch(c.nextUrl, nil)
+	defer body.Close()
+
+	utf8, err := charset.NewReader(body, "UTF-8")
 	util.CheckErr(err)
 
-	if e.name == "" {
-		e.name = reader.Find("#_bqgmb_h1").Text()
-	}
-	content, _ := reader.Find("#nr1").Html()
-	nextHref, _ := reader.Find("#pt_next").Attr("href")
+	reader, err := goquery.NewDocumentFromReader(utf8)
+	util.CheckErr(err)
+
+	reader.Find("*").Each(func(i int, selection *goquery.Selection) {
+		// 去除js
+		if selection.Is("script") {
+			selection.Remove()
+		}
+	})
+
+	// html, err := reader.Find("#chaptercontent").Html()
+	// if err != nil {
+	// 	return
+	// }
+	// util.DD(html)
+
+	content, _ := reader.Find("#chaptercontent").Html()
+	nextHref, _ := reader.Find("#pb_next").Attr("href")
 
 	c.nextUrl = ""
 	str1 := strings.Replace(nextHref, ".html", "", 1)
@@ -154,6 +175,15 @@ func (c *chapter) fetchPage(e *EBook) {
 	if strings.HasPrefix(str1, str2) {
 		c.nextUrl = e.host + nextHref
 	}
+	compile, _ := regexp.Compile(`第\(.*?\)页`)
+	util.CheckErr(err)
+	all := compile.ReplaceAllString(content, "\n")
+
+	compile, _ = regexp.Compile(`：\w.+?.com`)
+	util.CheckErr(err)
+	all = compile.ReplaceAllString(all, "\n")
+
+	content = strings.ReplaceAll(all, "<br/>", "\n")
 	if c.content == "" {
 		c.content = strings.TrimSuffix(content, "\n")
 	} else {
