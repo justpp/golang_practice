@@ -6,9 +6,11 @@ import (
 	"giao/pkg/util/custom_http"
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html/charset"
+	"golang.org/x/text/encoding/simplifiedchinese"
 	"net/url"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -32,7 +34,18 @@ type EBook struct {
 
 func (e *EBook) Run(EbookUrl string) {
 	start := time.Now()
-	e.FetchMenuList(EbookUrl)
+	//e.FetchMenuList(EbookUrl)
+
+	e.host = "https://m2.ddyueshu.com"
+	e.linkCount = 1
+	e.G = 1
+	e.menuMap = make(map[int]*chapter)
+	e.menuMap[1] = &chapter{
+		//url: "/wapbook/11082821_703430439.html",
+		//url:   "/wapbook/11082821_723630156.html",
+		url:   "/wapbook/11082821_757213018.html",
+		title: "第1208章 元央界和二代洛白衣",
+	}
 
 	e.goFetchData()
 	fmt.Println("内容已获取完成")
@@ -51,16 +64,17 @@ func (e *EBook) FetchMenuList(EbookUrl string) {
 	e.menuMap = make(map[int]*chapter)
 
 	for e.nextUrl != "" {
+		fmt.Println(e.nextUrl)
 		e.fetchMenu()
 	}
 	fmt.Println("章节：", e.linkCount)
 }
 
 func (e *EBook) fetchMenu() {
-	body := custom_http.Fetch(e.nextUrl, nil)
-	defer body.Close()
+	res := custom_http.Fetch(e.nextUrl, nil)
+	defer res.Body.Close()
 
-	utf8, err := charset.NewReader(body, "UTF-8")
+	utf8, err := charset.NewReader(res.Body, "UTF-8")
 	util.CheckErr(err)
 	e.nextUrl = ""
 
@@ -93,25 +107,28 @@ func (e *EBook) fetchMenu() {
 func (e *EBook) download() {
 	dirName := "./download/"
 	if ok, _ := util.IsExists(dirName); !ok {
-		_ = os.Mkdir(dirName, 0644)
+		err := os.Mkdir(dirName, 0744)
+		util.CheckErr(err)
 	}
 	content := ""
 
 	for i := 0; i < e.linkCount+1; i++ {
 		c, ok := e.menuMap[i]
 		if ok {
-			// content = content + "\n\n" + c.title + "\n\n" + c.content
-			content = content + "\n\n" + "\n\n" + c.content
+			content = content + "\n\n" + c.title + "\n\n" + c.content
 		}
 	}
 
-	content = strings.Replace(content, "<br/><br/>", "\n", -1)
-
+	if e.name == "" {
+		e.name = strconv.FormatInt(time.Now().Unix(), 10)
+	}
 	fileName := dirName + e.name + ".txt"
+	fmt.Println("filename", fileName)
 	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY, os.ModePerm)
-	defer file.Close()
 	util.CheckErr(err)
-	_, _ = file.Write([]byte(content))
+	defer file.Close()
+	_, err = file.Write([]byte(content))
+	util.CheckErr(err)
 }
 
 func (e *EBook) goFetchData() {
@@ -143,13 +160,13 @@ func (e *EBook) fetchContent(c *chapter) {
 }
 
 func (c *chapter) fetchPage(e *EBook) {
-	body := custom_http.Fetch(c.nextUrl, nil)
+	res := custom_http.Fetch(c.nextUrl, nil)
+	body := res.Body
 	defer body.Close()
 
-	utf8, err := charset.NewReader(body, "UTF-8")
-	util.CheckErr(err)
+	simpl := simplifiedchinese.GB18030.NewDecoder().Reader(body)
 
-	reader, err := goquery.NewDocumentFromReader(utf8)
+	reader, err := goquery.NewDocumentFromReader(simpl)
 	util.CheckErr(err)
 
 	reader.Find("*").Each(func(i int, selection *goquery.Selection) {
@@ -159,13 +176,13 @@ func (c *chapter) fetchPage(e *EBook) {
 		}
 	})
 
-	// html, err := reader.Find("#chaptercontent").Html()
-	// if err != nil {
-	// 	return
-	// }
-	// util.DD(html)
+	//readerHtml, err := reader.Html()
+	//if err != nil {
+	//	return
+	//}
+	//util.DD(readerHtml)
 
-	content, _ := reader.Find("#chaptercontent").Html()
+	content := reader.Find("#chaptercontent").Text()
 	nextHref, _ := reader.Find("#pb_next").Attr("href")
 
 	c.nextUrl = ""
@@ -175,18 +192,37 @@ func (c *chapter) fetchPage(e *EBook) {
 	if strings.HasPrefix(str1, str2) {
 		c.nextUrl = e.host + nextHref
 	}
-	compile, _ := regexp.Compile(`第\(.*?\)页`)
-	util.CheckErr(err)
-	all := compile.ReplaceAllString(content, "\n")
 
-	compile, _ = regexp.Compile(`：\w.+?.com`)
-	util.CheckErr(err)
-	all = compile.ReplaceAllString(all, "\n")
+	content = strings.ReplaceAll(content, " ", " ")
+	content = strings.TrimPrefix(content, "\n")
+	content = strings.TrimSuffix(content, "\n")
 
-	content = strings.ReplaceAll(all, "<br/>", "\n")
+	defer func() {
+		a := recover()
+		if a != nil {
+			fmt.Println("defer err", a, c.url)
+		}
+	}()
+	strReg := []struct {
+		key string
+		val string
+	}{
+		//{`第\(.*?\)页`, ""},
+		{`第*\(.*?\)页*`, ""},
+		{`记住+?.*?\.com`, ""},
+		{c.title, ""},
+		{`\s{2,}`, "\n   "},
+		{`  `, "\n   "},
+	}
+
+	for _, s2 := range strReg {
+		compile, _ := regexp.Compile(s2.key)
+		content = compile.ReplaceAllString(content, s2.val)
+	}
+
 	if c.content == "" {
 		c.content = strings.TrimSuffix(content, "\n")
 	} else {
-		c.content = c.content + strings.TrimSpace(content)
+		c.content = c.content + content
 	}
 }
