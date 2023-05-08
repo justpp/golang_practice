@@ -7,6 +7,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/encoding/simplifiedchinese"
+	"log"
 	"net/url"
 	"os"
 	"regexp"
@@ -17,10 +18,11 @@ import (
 )
 
 type chapter struct {
-	url     string
-	nextUrl string
-	title   string
-	content string
+	url        string
+	nextUrl    string
+	title      string
+	content    string
+	retryCount int
 }
 
 type EBook struct {
@@ -34,18 +36,19 @@ type EBook struct {
 
 func (e *EBook) Run(EbookUrl string) {
 	start := time.Now()
-	//e.FetchMenuList(EbookUrl)
+	e.FetchMenuList(EbookUrl)
 
-	e.host = "https://m2.ddyueshu.com"
-	e.linkCount = 1
-	e.G = 1
-	e.menuMap = make(map[int]*chapter)
-	e.menuMap[1] = &chapter{
-		//url: "/wapbook/11082821_703430439.html",
-		//url:   "/wapbook/11082821_723630156.html",
-		url:   "/wapbook/11082821_757213018.html",
-		title: "第1208章 元央界和二代洛白衣",
-	}
+	// e.host = "https://m2.ddyueshu.com"
+	// e.linkCount = 1
+	// e.G = 1
+	// e.menuMap = make(map[int]*chapter)
+	// e.menuMap[1] = &chapter{
+	// 	// url: "/wapbook/11082821_703430439.html",
+	// 	// url: "/wapbook/11082821_723630156.html",
+	// 	// url:   "/wapbook/11082821_757213018.html",
+	// 	url:   "/wapbook/11082821_747122134.html",
+	// 	title: "第1208章 元央界和二代洛白衣(2/3,求月票）",
+	// }
 
 	e.goFetchData()
 	fmt.Println("内容已获取完成")
@@ -160,7 +163,14 @@ func (e *EBook) fetchContent(c *chapter) {
 }
 
 func (c *chapter) fetchPage(e *EBook) {
+	defer func() {
+		a := recover()
+		if a != nil {
+			fmt.Println("defer err", a, c.url)
+		}
+	}()
 	res := custom_http.Fetch(c.nextUrl, nil)
+	currUrl := c.nextUrl
 	body := res.Body
 	defer body.Close()
 
@@ -176,13 +186,13 @@ func (c *chapter) fetchPage(e *EBook) {
 		}
 	})
 
-	//readerHtml, err := reader.Html()
-	//if err != nil {
-	//	return
-	//}
-	//util.DD(readerHtml)
+	readerHtml, err := reader.Html()
+	if err != nil {
+		return
+	}
+	util.DD(readerHtml)
 
-	content := reader.Find("#chaptercontent").Text()
+	content, _ := reader.Find("#chaptercontent").Html()
 	nextHref, _ := reader.Find("#pb_next").Attr("href")
 
 	c.nextUrl = ""
@@ -193,36 +203,42 @@ func (c *chapter) fetchPage(e *EBook) {
 		c.nextUrl = e.host + nextHref
 	}
 
-	content = strings.ReplaceAll(content, " ", " ")
-	content = strings.TrimPrefix(content, "\n")
-	content = strings.TrimSuffix(content, "\n")
+	compile := regexp.MustCompile(`<br/>.*?<br/>`)
+	matchString := compile.FindAllStringSubmatch(content, -1)
 
-	defer func() {
-		a := recover()
-		if a != nil {
-			fmt.Println("defer err", a, c.url)
+	content = ""
+	for _, v := range matchString {
+		str := strings.ReplaceAll(v[0], "<br/>", "")
+		strReg := []util.RegRep{
+			{`第*\(.*?\)页*`, " "},
+			{`记住+?.*?\.com`, " "},
+			{` `, " "},
 		}
-	}()
-	strReg := []struct {
-		key string
-		val string
-	}{
-		//{`第\(.*?\)页`, ""},
-		{`第*\(.*?\)页*`, ""},
-		{`记住+?.*?\.com`, ""},
-		{c.title, ""},
-		{`\s{2,}`, "\n   "},
-		{`  `, "\n   "},
+		str = util.RegReplace(str, strReg)
+		str = strings.TrimSpace(str)
+		if len(str) == 0 {
+			continue
+		}
+
+		if content == "" {
+			content = str
+		} else {
+			content += "\n\n	" + str
+		}
 	}
 
-	for _, s2 := range strReg {
-		compile, _ := regexp.Compile(s2.key)
-		content = compile.ReplaceAllString(content, s2.val)
+	if len(content) == 0 {
+		// c.retryCount++
+		log.Println("弹广告了", currUrl)
+		// c.nextUrl = currUrl
+		if c.retryCount > 5 {
+			log.Fatalln("tmd试了", c.retryCount, "次了:", currUrl)
+		}
+		// time.Sleep(time.Second * 6)
+		return
 	}
-
-	if c.content == "" {
-		c.content = strings.TrimSuffix(content, "\n")
-	} else {
-		c.content = c.content + content
+	if content[0:1] != " " {
+		content = "    " + content
 	}
+	c.content = c.content + content
 }

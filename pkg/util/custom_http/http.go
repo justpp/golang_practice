@@ -2,11 +2,10 @@ package custom_http
 
 import (
 	"giao/pkg/util"
-	"io"
 	"net/http"
 )
 
-func Fetch(url string, header map[string]string) (body io.ReadCloser) {
+func Fetch(url string, header map[string]string) *http.Response {
 	c := &http.Client{}
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -18,6 +17,5 @@ func Fetch(url string, header map[string]string) (body io.ReadCloser) {
 	util.CheckErr(err)
 	res, err := c.Do(req)
 	util.CheckErr(err)
-
-	return res.Body
+	return res
 }
