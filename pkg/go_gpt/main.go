@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"giao/pkg/util"
 	"github.com/sashabaranov/go-openai"
+	"github.com/unidoc/unipdf/v3/common/license"
 	"os"
 	"strings"
 )
 
 // $env:HTTPS_PROXY="http://127.0.0.1:10809"
 func main() {
+	license.SetMeteredKey("!")
 	env := util.NewEnv()
 	token := env.Get("talkSecret")
 	client := openai.NewClient(token.(string))
