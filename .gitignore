@@ -1,13 +1,14 @@
 .idea/
-*.exe
-*.txt
-*.yaml
+**/main
+**.exe
+**.txt
+**.yaml
 /log/
 go.sum
 /qr_code.png
 /jd/cookies/cookie.json
 /jd/cookies/cookie.txt
-/*.apk
+**.apk
 /main
 /.vscode/launch.json
 
@@ -21,6 +22,5 @@ giao
 /tour/blog/storage/
 tour/grpc-demo/vendor/
 
-*/go.sum
 */vendor
 /**/**/vendor/

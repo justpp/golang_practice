@@ -6,21 +6,70 @@
 
     <link href="https://cdn.bootcss.com/twitter-bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .msg-list { height: 400px; overflow: scroll; border: 1px solid #ccc; background-color: #f3f3f3; display: flex;flex-direction: column; }
-        .message { margin: 15px 5px 5px 5px; padding: 5px; background-color: #fff; }
-        .message { align-self: flex-start; }
-        .message .meta { color: #ccc; font-size: 12px; }
-        .message .author { color: #999; font-weight: bold; }
-        .myself { background-color: #b0e46e !important; align-self: flex-end; }
-        .myself .meta { color: #2b2b2b; }
+        .msg-list {
+            height: 400px;
+            overflow: scroll;
+            border: 1px solid #ccc;
+            background-color: #f3f3f3;
+            display: flex;
+            flex-direction: column;
+        }
 
-        .system { background-color: #f3f3f3; color: #ccc; align-self: center; }
+        .message {
+            margin: 15px 5px 5px 5px;
+            padding: 5px;
+            background-color: #fff;
+        }
 
-        .user-list { padding-left: 10px; height: 400px; overflow: scroll; border: 1px solid #ccc; background-color: #f3f3f3; }
-        .user-list .user { background-color: #fff; margin: 5px; }
+        .message {
+            align-self: flex-start;
+        }
 
-        .user-input { margin: 10px; }
-        .usertip { color: red; }
+        .message .meta {
+            color: #ccc;
+            font-size: 12px;
+        }
+
+        .message .author {
+            color: #999;
+            font-weight: bold;
+        }
+
+        .myself {
+            background-color: #b0e46e !important;
+            align-self: flex-end;
+        }
+
+        .myself .meta {
+            color: #2b2b2b;
+        }
+
+        .system {
+            background-color: #f3f3f3;
+            color: #ccc;
+            align-self: center;
+        }
+
+        .user-list {
+            padding-left: 10px;
+            height: 400px;
+            overflow: scroll;
+            border: 1px solid #ccc;
+            background-color: #f3f3f3;
+        }
+
+        .user-list .user {
+            background-color: #fff;
+            margin: 5px;
+        }
+
+        .user-input {
+            margin: 10px;
+        }
+
+        .usertip {
+            color: red;
+        }
     </style>
 </head>
 <body>
@@ -29,7 +78,7 @@
     <div class="row">
         <div class="col-md-12">
             <div class="page-header">
-                <h2 class="text-center">欢迎来到《Go 语言编程之旅：一起用 Go 做项目》聊天室</h2>
+                <h2 class="text-center">欢迎来到 聊天室</h2>
             </div>
         </div>
     </div>
@@ -42,7 +91,9 @@
                      v-for="msg in msglist"
                      v-bind:class="{ system: msg.type>0, myself: msg.user.nickname==curUser.nickname }"
                 >
-                    <div class="meta" v-if="msg.type==0"><span class="author">${ msg.user.nickname }</span> at ${ formatDate(msg.msg_time) } ${ calc(msg) }</div>
+                    <div class="meta" v-if="msg.type==0"><span class="author">${ msg.user.nickname }</span> at ${
+                        formatDate(msg.msg_time) } ${ calc(msg) }
+                    </div>
                     <div>
                         <span class="content" style="white-space: pre-wrap;">${ msg.content }</span>
                     </div>
@@ -66,10 +117,13 @@
                 <div class="form-inline has-success text-center" style="margin-bottom: 10px;">
                     <div class="input-group">
                         <span class="input-group-addon">您的昵称</span>
-                        <input type="text" v-model="curUser.nickname" v-bind:disabled="joined" class="form-control" aria-describedby="inputGroupSuccess1Status">
+                        <input type="text" v-model="curUser.nickname" v-bind:disabled="joined" class="form-control"
+                               aria-describedby="inputGroupSuccess1Status">
                     </div>
-                    <input type="submit" class="form-control btn-primary text-center" v-on:click="leavechat" v-if="joined" value="离开聊天室">
-                    <input type="submit" class="form-control btn-primary text-center" v-on:click="joinchat" v-else="joined" value="进入聊天室">
+                    <input type="submit" class="form-control btn-primary text-center" v-on:click="leavechat"
+                           v-if="joined" value="离开聊天室">
+                    <input type="submit" class="form-control btn-primary text-center" v-on:click="joinchat"
+                           v-else="joined" value="进入聊天室">
                 </div>
                 <textarea id="chat-content" rows="3" class="form-control" v-model="content"
                           @keydown.enter.prevent.exact="sendChatContent"
@@ -95,6 +149,7 @@
                 uid: 0,
                 nickname: '',
                 token: '',
+                is_logining: false
             },
             usertip: "当前还未进入聊天室，请在下方「填上您的昵称」",
 
@@ -104,7 +159,7 @@
             users: [],
             indexMap: {},
         },
-        mounted: function() {
+        mounted: function () {
             let user = localStorage.getItem("user");
             if (user) {
                 this.curUser = JSON.parse(user);
@@ -114,7 +169,7 @@
             setInterval(this.keepAlive, 10000);
         },
         computed: {
-            onlineUserNum: function() {
+            onlineUserNum: function () {
                 return this.users.length;
             },
         },
@@ -133,14 +188,16 @@
                 if ("WebSocket" in window) {
                     let host = location.host;
                     // 打开一个 websocket 连接
-                    gWS = new WebSocket("ws://"+host+"/ws?nickname="+this.curUser.nickname+"&token="+this.curUser.token);
+                    gWS = new WebSocket("ws://" + host + "/ws?nickname=" + this.curUser.nickname + "&token=" + this.curUser.token);
 
                     gWS.onopen = function () {
+                        console.log("ws已连接")
                         // WebSocket 已连接上的回调
                     };
 
                     gWS.onmessage = function (evt) {
                         let data = JSON.parse(evt.data);
+                        console.log('onmessage',data)
                         if (data.type == 4) {
                             that.usertip = data.content;
                             that.joined = false;
@@ -175,7 +232,7 @@
                         that.addMsg2List(data);
                     };
 
-                    gWS.onerror = function(evt) {
+                    gWS.onerror = function (evt) {
                         console.log("发生错误：");
                         console.log(evt);
                     };
@@ -188,10 +245,10 @@
                     alert("您的浏览器不支持 WebSocket!");
                 }
             },
-            leavechat: function() {
+            leavechat: function () {
                 gWS.close();
 
-                that.msglist.splice(0);
+                this.msglist.splice(0);
 
                 this.addMsg2List({
                     user: {nickname: ""},
@@ -203,7 +260,7 @@
 
                 this.joined = false;
             },
-            sendChatContent: function() {
+            sendChatContent: function () {
                 let msg = JSON.stringify({"content": this.content});
                 gWS.send(msg);
 
@@ -220,7 +277,7 @@
                 this.addMsg2List(data);
                 this.content = "";
             },
-            fetchUserList: function() {
+            fetchUserList: function () {
                 let that = this;
                 // XMLHttpRequest对象用于在后台与服务器交换数据
                 var xhr = new XMLHttpRequest();
@@ -233,28 +290,31 @@
                 xhr.open('GET', '/user_list', true)
                 xhr.onreadystatechange = function () {
                     //readyStatus == 4说明请求已经完成
-                    if(xhr.readyState == 4 && xhr.status ==200) {
+                    if (xhr.readyState == 4 && xhr.status == 200) {
+
                         that.users.splice(0);
                         let users = JSON.parse(xhr.responseText);
+                        console.log("users",users)
                         for (let i in users) {
                             let user = users[i];
                             that.indexMap[user.nickname] = that.users.length;
                             that.users.push(user);
                         }
+                        console.log('this.users',this.users)
                     }
                 };
                 //发送数据
                 xhr.send();
             },
             // 换行
-            lineFeed: function(evt) {
+            lineFeed: function (evt) {
                 this.content = this.content + '\n';
             },
-            formatDate: function(dateStr) {
+            formatDate: function (dateStr) {
                 let d = new Date(dateStr);
                 return d.toLocaleString();
             },
-            calc: function(msg) {
+            calc: function (msg) {
                 if (typeof msg.client_send_time == "undefined") {
                     return '';
                 }
@@ -268,15 +328,15 @@
                 return "耗时 " + elaspe + "ms";
             },
 
-            addMsg2List: function(data) {
+            addMsg2List: function (data) {
                 if (data.content == "") {
                     return;
                 }
 
                 that = this;
                 if (data.ats != null) {
-                    data.ats.forEach(function(nickname) {
-                        if (nickname == '@'+that.nickname) {
+                    data.ats.forEach(function (nickname) {
+                        if (nickname == '@' + that.nickname) {
                             that.usertip = '有人 @ 你了';
                         }
                     })
@@ -290,18 +350,18 @@
 
                 this.msglist.push(data);
 
-                Vue.nextTick(function() {
+                Vue.nextTick(function () {
                     let msgList = document.querySelector('#msg-list');
                     msgList.scrollTop = msgList.scrollHeight;
                 })
 
-                setTimeout(function() {
+                setTimeout(function () {
                     that.usertip = '';
                 }, 5000);
             },
 
             // 保活
-            keepAlive: function() {
+            keepAlive: function () {
                 // 表明异常退出了
                 if (gWS.readyState == WebSocket.CLOSED && this.joined) {
                     console.log("reconnect");
@@ -309,7 +369,7 @@
                 }
             },
         },
-        delimiters:['${', '}']
+        delimiters: ['${', '}']
     })
 
 </script>
