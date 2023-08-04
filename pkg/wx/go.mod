@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/gin-gonic/gin v1.9.0
-	github.com/sashabaranov/go-openai v1.5.8
+	github.com/sashabaranov/go-openai v1.9.5
 	github.com/spf13/viper v1.15.0
 )
 

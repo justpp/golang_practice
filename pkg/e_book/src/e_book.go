@@ -35,6 +35,24 @@ type SiteT interface {
 	GetBookName(reader *goquery.Document) string
 	GetMenuNextPageUrl(reader *goquery.Document) string
 	GetMenuMap(e *EBook, reader *goquery.Document)
+
+	// GetChapterContent
+	// content := reader.Find("#rtext").Text()
+	//nextHref, _ := reader.Find("#linkNext").Attr("href")
+	//
+	//c.NextUrl = ""
+	//str1 := strings.Replace(nextHref, ".html", "", 1)
+	//str2 := strings.Replace(c.Url, ".html", "", 1)
+	//
+	//if strings.HasPrefix(str1, str2) {
+	//c.NextUrl = e.GetHost() + nextHref
+	//}
+	//
+	//if c.Content == "" {
+	//c.Content = strings.TrimSuffix(content, "\n")
+	//} else {
+	//c.Content = c.Content + strings.TrimSpace(content)
+	//}
 	GetChapterContent(c *Chapter, reader *goquery.Document, e *EBook)
 }
 
@@ -88,14 +106,14 @@ func (e *EBook) fetchMenu() {
 
 	//chapterList := reader.Find(".book_last").Last()
 	//chapterList.Find("a").Each(func(i int, selection *goquery.Selection) {
-	//	href, _ := selection.Attr("href")
-	//	title, _ := selection.Html()
-	//	e.LinkCount += 1
-	//	count := e.LinkCount
-	//	e.menuMap[count] = &chapter{
-	//		url:   href,
-	//		title: title,
-	//	}
+	//	//href, _ := selection.Attr("href")
+	//	//title, _ := selection.Html()
+	//	//e.LinkCount += 1
+	//	//count := e.LinkCount
+	//	//e.AddMenuMap(count, &src.Chapter{
+	//	//	Url:   href,
+	//	//	Title: title,
+	//	//})
 	//})
 	e.Site.GetMenuMap(e, reader)
 }
@@ -111,7 +129,7 @@ func (e *EBook) download() {
 		c, ok := e.menuMap[i]
 		if ok {
 			content = content + "\n\n" + c.Title + "\n\n" + c.Content
-			content = content + "\n\n" + "\n\n" + c.Content
+			//content = content + "\n\n" + "\n\n" + c.Content
 		}
 	}
 
@@ -135,6 +153,7 @@ func (e *EBook) goFetchData() {
 
 	gLimit := util.NewGLimit(g)
 	gLimit.Run(e.LinkCount, func(i int) {
+		//gLimit.Run(1, func(i int) {
 		atomic.AddInt32(&opts, 1)
 		c, ok := e.menuMap[i+1]
 		if ok {
