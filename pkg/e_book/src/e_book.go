@@ -6,23 +6,18 @@ import (
 	"giao/pkg/util/custom_http"
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html/charset"
-	"golang.org/x/text/encoding/simplifiedchinese"
-	"log"
 	"net/url"
 	"os"
-	"regexp"
-	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
 )
 
-type chapter struct {
-	url        string
-	nextUrl    string
-	title      string
-	content    string
-	retryCount int
+type Chapter struct {
+	Url     string
+	NextUrl string
+	Title   string
+	Content string
 }
 
 type EBook struct {
@@ -30,25 +25,22 @@ type EBook struct {
 	nextUrl   string
 	name      string
 	G         int // 限制协程数
-	linkCount int
-	menuMap   map[int]*chapter
+	LinkCount int
+	menuMap   map[int]*Chapter
+	Site      SiteT
+}
+
+type SiteT interface {
+	GetHost() string
+	GetBookName(reader *goquery.Document) string
+	GetMenuNextPageUrl(reader *goquery.Document) string
+	GetMenuMap(e *EBook, reader *goquery.Document)
+	GetChapterContent(c *Chapter, reader *goquery.Document, e *EBook)
 }
 
 func (e *EBook) Run(EbookUrl string) {
 	start := time.Now()
 	e.FetchMenuList(EbookUrl)
-
-	// e.host = "https://m2.ddyueshu.com"
-	// e.linkCount = 1
-	// e.G = 1
-	// e.menuMap = make(map[int]*chapter)
-	// e.menuMap[1] = &chapter{
-	// 	// url: "/wapbook/11082821_703430439.html",
-	// 	// url: "/wapbook/11082821_723630156.html",
-	// 	// url:   "/wapbook/11082821_757213018.html",
-	// 	url:   "/wapbook/11082821_747122134.html",
-	// 	title: "第1208章 元央界和二代洛白衣(2/3,求月票）",
-	// }
 
 	e.goFetchData()
 	fmt.Println("内容已获取完成")
@@ -63,21 +55,20 @@ func (e *EBook) FetchMenuList(EbookUrl string) {
 	e.host = u.Scheme + "://" + u.Hostname()
 	e.nextUrl = u.String()
 
-	e.linkCount = 0
-	e.menuMap = make(map[int]*chapter)
+	e.LinkCount = 0
+	e.menuMap = make(map[int]*Chapter)
 
 	for e.nextUrl != "" {
-		fmt.Println(e.nextUrl)
 		e.fetchMenu()
 	}
-	fmt.Println("章节：", e.linkCount)
+	fmt.Println("章节：", e.LinkCount)
 }
 
 func (e *EBook) fetchMenu() {
-	res := custom_http.Fetch(e.nextUrl, nil)
-	defer res.Body.Close()
+	resp := custom_http.Fetch(e.nextUrl, nil)
+	defer resp.Body.Close()
 
-	utf8, err := charset.NewReader(res.Body, "UTF-8")
+	utf8, err := charset.NewReader(resp.Body, "UTF-8")
 	util.CheckErr(err)
 	e.nextUrl = ""
 
@@ -85,53 +76,52 @@ func (e *EBook) fetchMenu() {
 	util.CheckErr(err)
 
 	if e.name == "" {
-		bookName, _ := reader.Find("meta[property=\"og:novel:book_name\"]").Attr("content")
-		e.name = bookName
+		//bookName, _ := reader.Find("meta[property=\"og:novel:book_name\"]").Attr("content")
+		e.name = e.Site.GetBookName(reader)
 	}
 
-	nextPage, _ := reader.Find(".listpage .right>a.onclick").Attr("href")
+	//nextPage, _ := reader.Find(".listpage .right>a.onclick").Attr("href")
+	nextPage := e.Site.GetMenuNextPageUrl(reader)
 	if nextPage != "" {
 		e.nextUrl = e.host + nextPage
 	}
 
-	chapterList := reader.Find(".book_last").Last()
-	chapterList.Find("a").Each(func(i int, selection *goquery.Selection) {
-		href, _ := selection.Attr("href")
-		title, _ := selection.Html()
-		e.linkCount += 1
-		count := e.linkCount
-		e.menuMap[count] = &chapter{
-			url:   href,
-			title: title,
-		}
-	})
+	//chapterList := reader.Find(".book_last").Last()
+	//chapterList.Find("a").Each(func(i int, selection *goquery.Selection) {
+	//	href, _ := selection.Attr("href")
+	//	title, _ := selection.Html()
+	//	e.LinkCount += 1
+	//	count := e.LinkCount
+	//	e.menuMap[count] = &chapter{
+	//		url:   href,
+	//		title: title,
+	//	}
+	//})
+	e.Site.GetMenuMap(e, reader)
 }
 
 func (e *EBook) download() {
 	dirName := "./download/"
 	if ok, _ := util.IsExists(dirName); !ok {
-		err := os.Mkdir(dirName, 0744)
-		util.CheckErr(err)
+		_ = os.Mkdir(dirName, 0644)
 	}
 	content := ""
 
-	for i := 0; i < e.linkCount+1; i++ {
+	for i := 0; i < e.LinkCount+1; i++ {
 		c, ok := e.menuMap[i]
 		if ok {
-			content = content + "\n\n" + c.title + "\n\n" + c.content
+			content = content + "\n\n" + c.Title + "\n\n" + c.Content
+			content = content + "\n\n" + "\n\n" + c.Content
 		}
 	}
 
-	if e.name == "" {
-		e.name = strconv.FormatInt(time.Now().Unix(), 10)
-	}
+	content = strings.Replace(content, "<br/><br/>", "\n", -1)
+
 	fileName := dirName + e.name + ".txt"
-	fmt.Println("filename", fileName)
 	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY, os.ModePerm)
-	util.CheckErr(err)
 	defer file.Close()
-	_, err = file.Write([]byte(content))
 	util.CheckErr(err)
+	_, _ = file.Write([]byte(content))
 }
 
 func (e *EBook) goFetchData() {
@@ -144,39 +134,32 @@ func (e *EBook) goFetchData() {
 	var opts int32 = 0
 
 	gLimit := util.NewGLimit(g)
-	gLimit.Run(e.linkCount, func(i int) {
+	gLimit.Run(e.LinkCount, func(i int) {
 		atomic.AddInt32(&opts, 1)
 		c, ok := e.menuMap[i+1]
 		if ok {
 			e.fetchContent(c)
 		}
 
-		fmt.Println("获取进度:", (float32(opts)/float32(e.linkCount))*100)
+		fmt.Println("获取进度:", (float32(opts)/float32(e.LinkCount))*100)
 	})
 }
 
-func (e *EBook) fetchContent(c *chapter) {
-	c.nextUrl = e.host + c.url
-	for c.nextUrl != "" {
+func (e *EBook) fetchContent(c *Chapter) {
+	c.NextUrl = e.host + c.Url
+	for c.NextUrl != "" {
 		c.fetchPage(e)
 	}
 }
 
-func (c *chapter) fetchPage(e *EBook) {
-	defer func() {
-		a := recover()
-		if a != nil {
-			fmt.Println("defer err", a, c.url)
-		}
-	}()
-	res := custom_http.Fetch(c.nextUrl, nil)
-	currUrl := c.nextUrl
-	body := res.Body
-	defer body.Close()
+func (c *Chapter) fetchPage(e *EBook) {
+	resp := custom_http.Fetch(c.NextUrl, nil)
+	defer resp.Body.Close()
 
-	simpl := simplifiedchinese.GB18030.NewDecoder().Reader(body)
+	utf8, err := charset.NewReader(resp.Body, "UTF-8")
+	util.CheckErr(err)
 
-	reader, err := goquery.NewDocumentFromReader(simpl)
+	reader, err := goquery.NewDocumentFromReader(utf8)
 	util.CheckErr(err)
 
 	reader.Find("*").Each(func(i int, selection *goquery.Selection) {
@@ -186,59 +169,44 @@ func (c *chapter) fetchPage(e *EBook) {
 		}
 	})
 
-	readerHtml, err := reader.Html()
-	if err != nil {
-		return
-	}
-	util.DD(readerHtml)
+	// html, err := reader.Find("#chaptercontent").Html()
+	// if err != nil {
+	// 	return
+	// }
+	// util.DD(html)
 
-	content, _ := reader.Find("#chaptercontent").Html()
-	nextHref, _ := reader.Find("#pb_next").Attr("href")
+	//content, _ := reader.Find("#chaptercontent").Html()
+	//nextHref, _ := reader.Find("#pb_next").Attr("href")
+	//
+	//c.nextUrl = ""
+	//str1 := strings.Replace(nextHref, ".html", "", 1)
+	//str2 := strings.Replace(c.url, ".html", "", 1)
+	//
+	//if strings.HasPrefix(str1, str2) {
+	//	c.nextUrl = e.host + nextHref
+	//}
+	//compile, _ := regexp.Compile(`第\(.*?\)页`)
+	//util.CheckErr(err)
+	//all := compile.ReplaceAllString(content, "\n")
+	//
+	//compile, _ = regexp.Compile(`：\w.+?.com`)
+	//util.CheckErr(err)
+	//all = compile.ReplaceAllString(all, "\n")
+	//
+	//content = strings.ReplaceAll(all, "<br/>", "\n")
+	//if c.content == "" {
+	//	c.content = strings.TrimSuffix(content, "\n")
+	//} else {
+	//	c.content = c.content + strings.TrimSpace(content)
+	//}
 
-	c.nextUrl = ""
-	str1 := strings.Replace(nextHref, ".html", "", 1)
-	str2 := strings.Replace(c.url, ".html", "", 1)
+	e.Site.GetChapterContent(c, reader, e)
+}
 
-	if strings.HasPrefix(str1, str2) {
-		c.nextUrl = e.host + nextHref
-	}
+func (e *EBook) AddMenuMap(k int, c *Chapter) {
+	e.menuMap[k] = c
+}
 
-	compile := regexp.MustCompile(`<br/>.*?<br/>`)
-	matchString := compile.FindAllStringSubmatch(content, -1)
-
-	content = ""
-	for _, v := range matchString {
-		str := strings.ReplaceAll(v[0], "<br/>", "")
-		strReg := []util.RegRep{
-			{`第*\(.*?\)页*`, " "},
-			{`记住+?.*?\.com`, " "},
-			{` `, " "},
-		}
-		str = util.RegReplace(str, strReg)
-		str = strings.TrimSpace(str)
-		if len(str) == 0 {
-			continue
-		}
-
-		if content == "" {
-			content = str
-		} else {
-			content += "\n\n	" + str
-		}
-	}
-
-	if len(content) == 0 {
-		// c.retryCount++
-		log.Println("弹广告了", currUrl)
-		// c.nextUrl = currUrl
-		if c.retryCount > 5 {
-			log.Fatalln("tmd试了", c.retryCount, "次了:", currUrl)
-		}
-		// time.Sleep(time.Second * 6)
-		return
-	}
-	if content[0:1] != " " {
-		content = "    " + content
-	}
-	c.content = c.content + content
+func (e *EBook) GetHost() string {
+	return e.host
 }

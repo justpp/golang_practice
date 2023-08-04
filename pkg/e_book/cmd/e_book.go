@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"giao/pkg/e_book/src"
+	"giao/pkg/e_book/src/sites"
 	"github.com/spf13/cobra"
 )
 
@@ -16,8 +17,10 @@ var (
 	cmd = &cobra.Command{
 		Short: "下载小说",
 		Run: func(cmd *cobra.Command, args []string) {
+			var site = sites.New().InitImport().GetSite(url)
 			var tool = src.EBook{
-				G: g,
+				G:    g,
+				Site: site,
 			}
 			tool.Run(url)
 		},
