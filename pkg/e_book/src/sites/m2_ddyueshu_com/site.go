@@ -30,6 +30,9 @@ func (s *Site) GetMenuMap(e *src.EBook, reader *goquery.Document) {
 	chapterList := reader.Find("#list")
 
 	chapterList.Find("a").Each(func(i int, selection *goquery.Selection) {
+		if i < 6 {
+			return
+		}
 		href, _ := selection.Attr("href")
 		title, _ := selection.Html()
 		e.LinkCount += 1
